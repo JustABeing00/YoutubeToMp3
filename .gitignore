@@ -1,0 +1,9 @@
+node_modules/
+.next/
+out/
+data/
+tmp/
+*.db*
+.env
+.env.local
+coverage/

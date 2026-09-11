@@ -1,0 +1,19 @@
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: file:/data/jobs.db
+      TEMP_DIR: /tmp/converter
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+    volumes:
+      - jobdata:/data
+      - jobtmp:/tmp/converter
+    restart: unless-stopped
+
+volumes:
+  jobdata:
+  jobtmp:
