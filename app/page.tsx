@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Converter } from "@/components/Converter";
+import { FaqExperience } from "@/components/FaqExperience";
 import { HowWeWork } from "@/components/HowWeWork";
 import { Reveal } from "@/components/Reveal";
 import { WhyStack } from "@/components/WhyStack";
@@ -45,6 +46,21 @@ const FAQS = [
   {
     q: "What happens to my files after conversion?",
     a: "You receive a temporary download link. Once it expires, the MP3 and any remaining working files are deleted automatically. Download anything you want to keep before the link expires, because expired files cannot be recovered.",
+  },
+];
+
+const HOME_FAQ_GROUPS = [
+  {
+    heading: "Using Kharb",
+    items: [FAQS[0], FAQS[1], FAQS[2], FAQS[8]],
+  },
+  {
+    heading: "Files and privacy",
+    items: [FAQS[3], FAQS[4], FAQS[9]],
+  },
+  {
+    heading: "Quality and limits",
+    items: [FAQS[5], FAQS[6], FAQS[7]],
   },
 ];
 
@@ -139,20 +155,9 @@ export default function Home() {
           </div>
         </section>
 
-        {/* FAQ — faq-row accordions of hairline dividers */}
-        <section aria-labelledby="faq" className="mx-auto mt-24 max-w-3xl">
-          <p className="eyebrow text-center text-inkmuted">FAQ</p>
-          <Reveal as="h2" id="faq" className="display-lg mt-4 text-center text-balance text-ink">
-            Frequently asked questions
-          </Reveal>
-          <div className="mt-10">
-            {FAQS.map((f) => (
-              <div key={f.q} className="faq-row py-6">
-                <h3 className="text-[15px] font-medium leading-[1.3] tracking-[-0.15px] text-ink">{f.q}</h3>
-                <p className="mt-2 text-[15px] leading-[1.3] tracking-[-0.15px] text-inkmuted">{f.a}</p>
-              </div>
-            ))}
-          </div>
+        {/* FAQ — editorial experience (search + categories live on the FAQ page) */}
+        <section aria-label="Frequently asked questions preview" className="mt-24">
+          <FaqExperience groups={HOME_FAQ_GROUPS} variant="teaser" showSearch={false} showCategories={false} />
           <p className="mt-8 text-center text-[15px] leading-[1.3] tracking-[-0.15px] text-inkmuted">
             Still stuck? See the{" "}
             <Link href="/faq" className="framer-link">

@@ -1,5 +1,5 @@
-import { InfoPage, InlineLink } from "@/components/InfoPage";
-import { Reveal } from "@/components/Reveal";
+import { InlineLink } from "@/components/InfoPage";
+import { FaqExperience } from "@/components/FaqExperience";
 import { faqJsonLd, pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta(
@@ -8,7 +8,7 @@ export const metadata = pageMeta(
   "Answers about the Kharb video-to-MP3 converter: how conversion works, file storage and deletion, audio quality, errors, permissions, and privacy."
 );
 
-const GROUPS: { heading: string; items: { q: string; a: string }[] }[] = [
+const GROUPS = [
   {
     heading: "Using the converter",
     items: [
@@ -95,29 +95,14 @@ const GROUPS: { heading: string; items: { q: string; a: string }[] }[] = [
 export default function FaqPage() {
   const flat = GROUPS.flatMap((g) => g.items);
   return (
-    <InfoPage
-      title="Frequently Asked Questions"
-      intro="Everything about converting videos to MP3 with Kharb: supported links, temporary storage, quality settings, errors, and the rules that keep the service legitimate."
-    >
-      {GROUPS.map((g) => (
-        <section key={g.heading} aria-label={g.heading} className="faq-row py-8 first:pt-0">
-          <Reveal as="h2" className="text-[22px] font-bold leading-[1.2] tracking-[-0.8px] text-ink">{g.heading}</Reveal>
-          <div className="mt-4 space-y-5">
-            {g.items.map((f) => (
-              <div key={f.q}>
-                <h3 className="text-[15px] font-medium leading-[1.3] tracking-[-0.15px] text-ink">{f.q}</h3>
-                <p className="mt-1">{f.a}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      ))}
-      <p className="pt-8 text-sm">
+    <main className="mx-auto w-full max-w-canvas bg-transparent px-5 py-16 sm:py-24">
+      <FaqExperience groups={GROUPS} variant="full" />
+      <p className="mx-auto mt-16 max-w-2xl text-center text-[15px] leading-[1.5] tracking-[-0.15px] text-inkmuted">
         New to the tool? Read <InlineLink href="/how-to-convert-video-to-mp3">how to convert a video to MP3</InlineLink>{" "}
         step by step, or <InlineLink href="/">convert a video to MP3 with our website</InlineLink> right away. Anything
         unresolved can go to the <InlineLink href="/contact">contact page</InlineLink>.
       </p>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(flat)) }} />
-    </InfoPage>
+    </main>
   );
 }
