@@ -4,12 +4,12 @@
 # See docs/deployment.md for the breakdown and free-tier picks.
 FROM node:22-bookworm-slim AS base
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 ffmpeg curl ca-certificates unzip \
+    python3 ffmpeg curl ca-certificates unzip git \
  && rm -rf /var/lib/apt/lists/*
 # Deno provides the JS runtime yt-dlp needs for YouTube's JS challenge.
-# Node is already in the image; the adapter passes --js-runtimes "node,deno"
-# so either runtime satisfies yt-dlp and the "No supported JavaScript
-# runtime" warning (which degrades extraction) goes away.
+# The adapter passes --js-runtimes "deno" (single name — yt-dlp ignores
+# comma-joined values), so the "No supported JavaScript runtime" warning
+# (which degrades extraction) goes away.
 RUN curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh \
  && deno --version
 # yt-dlp static binary (no pip needed). Re-pulled on every --no-cache build,
@@ -18,6 +18,22 @@ RUN curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh \
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
  && chmod +x /usr/local/bin/yt-dlp \
  && yt-dlp --version
+
+# PO-token stack for YouTube bot checks on flagged datacenter IPs (free, no
+# cookies, no proxy). Pinned provider release: bump ARG to upgrade both parts
+# together (plugin zip + server sources must match).
+ARG BGUTIL_VERSION=2.0.0
+RUN mkdir -p /opt/yt-dlp-plugins /root/bgutil-ytdlp-pot-provider \
+ && curl -L https://github.com/Brainicism/bgutil-ytdlp-pot-provider/releases/download/${BGUTIL_VERSION}/bgutil-ytdlp-pot-provider.zip \
+      -o /opt/yt-dlp-plugins/bgutil-ytdlp-pot-provider.zip \
+ && curl -L https://github.com/Brainicism/bgutil-ytdlp-pot-provider/archive/refs/tags/${BGUTIL_VERSION}.tar.gz \
+      -o /tmp/bgutil.tgz \
+ && tar -xzf /tmp/bgutil.tgz -C /root/bgutil-ytdlp-pot-provider --strip-components=1 \
+ && rm /tmp/bgutil.tgz \
+ && cd /root/bgutil-ytdlp-pot-provider/server && deno install --allow-scripts=npm:canvas --frozen
+# Chrome TLS fingerprint + PO-token plugin dir. Overridable at runtime;
+# empty locally (see .env.example) if your yt-dlp lacks curl_cffi/plugins.
+ENV YTDLP_EXTRA_ARGS="--impersonate chrome --plugin-dirs /opt/yt-dlp-plugins"
 
 WORKDIR /app
 COPY package.json package-lock.json ./

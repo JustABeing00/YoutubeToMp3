@@ -19,6 +19,21 @@ const envSchema = z.object({
   PROCESSING_TIMEOUT_MIN: z.coerce.number().int().min(2).max(120).default(15),
   DEFAULT_BITRATE: z.coerce.number().default(192),
   NODE_ENV: z.string().default("development"),
+  // Free Piped/Invidious fallback when direct yt-dlp download is IP-blocked.
+  // "true" keeps conversions working on flagged datacenter IPs; set "false"
+  // to force direct-only downloads.
+  FALLBACK_ENABLED: z.string().default("true"),
+  // Comma-separated public API bases, tried in order. Override when instances die.
+  PIPED_API_URLS: z
+    .string()
+    .default("https://pipedapi.kavin.rocks,https://pipedapi.adminforge.de,https://pipedapi.leptons.xyz"),
+  INVIDIOUS_API_URLS: z.string().default("https://inv.invidious.nerdvpn.de,https://invidious.nerdvpn.de"),
+  FALLBACK_API_TIMEOUT_SEC: z.coerce.number().int().min(3).max(60).default(10),
+  // Extra argv appended to every yt-dlp call (space-separated, no quoting).
+  // Operator-owned env, never user input. Docker image sets Chrome TLS
+  // fingerprint + PO-token plugin dir; leave empty on machines whose yt-dlp
+  // lacks curl_cffi or the plugin.
+  YTDLP_EXTRA_ARGS: z.string().default(""),
 });
 
 export type AppConfig = z.infer<typeof envSchema>;

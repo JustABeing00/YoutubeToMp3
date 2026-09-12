@@ -113,6 +113,7 @@ ffprobe-verified output · redacted structured logs. Details: `docs/security.md`
 | `requires sign-in / private` | video needs auth — expected, can't convert |
 | `file too large / too long` | over `MAX_FILE_MB` / `MAX_INPUT_DURATION_SEC` |
 | `rate limited / server busy` | wait, or raise limits in `.env` |
+| `HTTP 403 on download` (flagged VPS IP) | container mints proof-of-origin tokens + Chrome fingerprint automatically (`YTDLP_EXTRA_ARGS`); on failure it retries via free Piped/Invidious backends (`FALLBACK_*` in `.env`). If all fail, the host IP range is burned — refresh `PIPED_API_URLS`/`INVIDIOUS_API_URLS` or rebuild monthly for latest yt-dlp fixes |
 | `better-sqlite3` install fails on Windows | not used — storage is Node's built-in `node:sqlite`, no build tools needed |
 | Expired download (410) | TTL passed — convert again |
 | `ExperimentalWarning: SQLite…` on Node 24 | benign — `node:sqlite` prints this on some versions; everything works |

@@ -6,6 +6,9 @@ import { AdapterError, type DownloadResult, type MediaMetadata, type MediaSource
 export { AdapterError };
 export type { DownloadResult, MediaMetadata, MediaSourceAdapter };
 import { getConfig } from "@/lib/config";
+import { assertUrlSafe } from "@/lib/security/ssrf";
+import { logError, logEvent } from "@/lib/logging/logger";
+import { resolveFallbackAudioUrl } from "./fallback";
 
 /**
  * YouTube adapter backed by yt-dlp. All invocations use spawn() with an
@@ -13,10 +16,13 @@ import { getConfig } from "@/lib/config";
  * interpolated into a shell string (command-injection safe).
  *
  * VPS note: YouTube serves metadata from one endpoint but the actual media
- * bytes from googlevideo.com, which 403-blocks many datacenter IPs when the
- * default web/visionos player client is used. Forcing the android client +
- * IPv4 bypasses most of those blocks without cookies. Deno/Node give yt-dlp
- * the JS runtime it needs for signature challenges.
+ * bytes from googlevideo.com, which 403-blocks many datacenter IPs, and the
+ * android/ios player clients now return SABR-only responses with no playable
+ * formats (Sept 2026). So: default player client for listing, Deno as the JS
+ * runtime (single name — yt-dlp ignores comma-joined values), IPv4 only
+ * (Hostinger has no IPv6 route), Chrome TLS fingerprint + self-minted
+ * proof-of-origin tokens via YTDLP_EXTRA_ARGS (see Dockerfile), and a free
+ * Piped/Invidious fallback (./fallback.ts) when the direct download 403s.
  *
  * Only use with content you own or have permission to download.
  */
@@ -27,10 +33,8 @@ const YT_BASE_ARGS = [
   "--force-ipv4",
   "--no-playlist",
   "--no-warnings",
-  "--extractor-args",
-  "youtube:player_client=android",
   "--js-runtimes",
-  "node,deno",
+  "deno",
   "--retries",
   "3",
   "--fragment-retries",
@@ -38,6 +42,15 @@ const YT_BASE_ARGS = [
   "--retry-sleep",
   "1",
 ];
+
+/**
+ * Operator-owned extra yt-dlp argv from YTDLP_EXTRA_ARGS (space-separated).
+ * Never derived from user input — safe to append.
+ */
+function extraArgs(): string[] {
+  const raw = getConfig().YTDLP_EXTRA_ARGS.trim();
+  return raw ? raw.split(/\s+/) : [];
+}
 
 function run(cmd: string, args: string[], timeoutMs: number): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
@@ -106,7 +119,7 @@ export class YoutubeAdapter implements MediaSourceAdapter {
     const { YTDLP_PATH } = getConfig();
     const { stdout } = await run(
       YTDLP_PATH,
-      [...YT_BASE_ARGS, "--skip-download", "--dump-single-json", "--", url],
+      [...YT_BASE_ARGS, ...extraArgs(), "--skip-download", "--dump-single-json", "--", url],
       45_000
     );
     let data: YtDlpJson;
@@ -141,11 +154,57 @@ export class YoutubeAdapter implements MediaSourceAdapter {
     await fs.mkdir(path.dirname(outputPath), { recursive: true });
     // Download best audio ≤ ~320k. yt-dlp merges/selects; extension varies.
     const template = `${outputPath}.%(ext)s`;
-    await new Promise<void>((resolve, reject) => {
+    try {
+      await this.runYtDlpDownload(YTDLP_PATH, template, url, opts);
+    } catch (e) {
+      // Auth/size verdicts are final — a third-party resolver can't help.
+      if (e instanceof AdapterError && (e.code === "AUTH_REQUIRED" || e.code === "OUTPUT_TOO_LARGE")) throw e;
+      if (getConfig().FALLBACK_ENABLED !== "true") throw e;
+      // Direct googlevideo download blocked (typically HTTP 403 on datacenter
+      // IPs): resolve a playable stream via public backends and fetch it with
+      // the hardened direct downloader (SSRF-checked, size-capped).
+      logEvent("media.fallback_attempt", { adapter: "youtube" });
+      try {
+        const stream = await resolveFallbackAudioUrl(url);
+        await assertUrlSafe(stream.url);
+        const dl = await new DirectFileAdapter().downloadSource(stream.url, outputPath, opts);
+        logEvent("media.fallback_used", { adapter: "youtube", via: stream.via });
+        return dl;
+      } catch (fb) {
+        logError("media.fallback_failed", fb, { adapter: "youtube" });
+        throw e; // original direct error is the actionable one
+      }
+    }
+
+    // yt-dlp appends the real extension; find the produced file.
+    const dir = path.dirname(outputPath);
+    const base = path.basename(outputPath);
+    const entries = await fs.readdir(dir);
+    const match = entries.find((e) => e.startsWith(`${base}.`));
+    if (!match) throw new AdapterError("RETRIEVAL_FAILED", "downloader produced no file");
+    const filePath = path.join(dir, match);
+    const stat = await fs.stat(filePath);
+    if (stat.size === 0) throw new AdapterError("RETRIEVAL_FAILED", "empty download");
+    if (stat.size > opts.maxBytes) {
+      await fs.rm(filePath, { force: true });
+      throw new AdapterError("OUTPUT_TOO_LARGE", "source exceeds size limit");
+    }
+    return { filePath, bytes: stat.size, ext: path.extname(match).slice(1), duration: null };
+  }
+
+  /** Direct yt-dlp byte download. Resolves on success, throws AdapterError otherwise. */
+  private runYtDlpDownload(
+    ytdlpPath: string,
+    template: string,
+    url: string,
+    opts: { timeoutMs: number; onProgress?: (p: number) => void }
+  ): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
       const child = spawn(
-        YTDLP_PATH,
+        ytdlpPath,
         [
           ...YT_BASE_ARGS,
+          ...extraArgs(),
           "-f",
           "bestaudio/best",
           "--no-part",
@@ -176,7 +235,7 @@ export class YoutubeAdapter implements MediaSourceAdapter {
         clearTimeout(timer);
         const e = err as NodeJS.ErrnoException;
         if (e.code === "ENOENT") {
-          reject(new AdapterError("SERVER_ERROR", `yt-dlp binary not found at "${YTDLP_PATH}".`));
+          reject(new AdapterError("SERVER_ERROR", `yt-dlp binary not found at "${ytdlpPath}".`));
         } else reject(new AdapterError("RETRIEVAL_FAILED", e.message));
       });
       child.on("close", (code) => {
@@ -191,21 +250,6 @@ export class YoutubeAdapter implements MediaSourceAdapter {
         }
       });
     });
-
-    // yt-dlp appends the real extension; find the produced file.
-    const dir = path.dirname(outputPath);
-    const base = path.basename(outputPath);
-    const entries = await fs.readdir(dir);
-    const match = entries.find((e) => e.startsWith(`${base}.`));
-    if (!match) throw new AdapterError("RETRIEVAL_FAILED", "downloader produced no file");
-    const filePath = path.join(dir, match);
-    const stat = await fs.stat(filePath);
-    if (stat.size === 0) throw new AdapterError("RETRIEVAL_FAILED", "empty download");
-    if (stat.size > opts.maxBytes) {
-      await fs.rm(filePath, { force: true });
-      throw new AdapterError("OUTPUT_TOO_LARGE", "source exceeds size limit");
-    }
-    return { filePath, bytes: stat.size, ext: path.extname(match).slice(1), duration: null };
   }
 }
 
