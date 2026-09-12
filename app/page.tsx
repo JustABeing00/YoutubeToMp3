@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Converter } from "@/components/Converter";
 import { HowWeWork } from "@/components/HowWeWork";
 import { Reveal } from "@/components/Reveal";
+import { WhyStack } from "@/components/WhyStack";
 import { faqJsonLd } from "@/lib/seo";
 
 const FAQS = [
@@ -45,13 +46,6 @@ const FAQS = [
     q: "What happens to my files after conversion?",
     a: "You receive a temporary download link. Once it expires, the MP3 and any remaining working files are deleted automatically. Download anything you want to keep before the link expires, because expired files cannot be recovered.",
   },
-];
-
-const WHY = [
-  { title: "No sign-up", body: "The full workflow works without an account. No identity, no library, no profiles." },
-  { title: "Honest progress", body: "Status and percentage come from the actual job — queued to finalizing — not an animation." },
-  { title: "Your quality call", body: "Compact 128 kbps files up to 320 kbps for careful listening. 192 kbps by default." },
-  { title: "Temporary by design", body: "Working files and finished MP3s delete automatically on a schedule. Nothing to remember." },
 ];
 
 export default function Home() {
@@ -114,37 +108,10 @@ export default function Home() {
       <HowWeWork />
 
       <div className="mx-auto w-full max-w-canvas px-5">
-        {/* WHY — charcoal grid */}
-        <section aria-labelledby="why" className="mt-24">
-          <p className="eyebrow text-inkmuted">Why Kharb</p>
-          <Reveal as="h2" id="why" className="display-lg mt-4 text-balance text-ink">
-            Built around restraint
-          </Reveal>
-          <div className="mt-10 grid gap-4 md:grid-cols-2">
-            {WHY.map((w) => (
-              <div key={w.title} className="card-charcoal flex gap-4 p-8">
-                <span
-                  className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#22c55e]/15 text-sm text-[#22c55e]"
-                  aria-hidden
-                >
-                  ✓
-                </span>
-                <div>
-                  <p className="text-[22px] font-bold leading-[1.2] tracking-[-0.8px] text-ink">{w.title}</p>
-                  <p className="mt-2 text-[15px] leading-[1.3] tracking-[-0.15px] text-inkmuted">{w.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="mt-6 text-[15px] leading-[1.3] tracking-[-0.15px] text-inkmuted">
-            Errors are stated plainly — unsupported link, private video, busy server — instead of failing silently.
-            Common cases are covered in the{" "}
-            <Link href="/faq" className="framer-link">
-              frequently asked questions
-            </Link>
-            .
-          </p>
-        </section>
+        {/* WHY — Brilean "What we do" stacking-deck port */}
+        <div className="mt-24">
+          <WhyStack />
+        </div>
 
         {/* PRIVACY — charcoal card, same system as the rest of the site */}
         <section aria-labelledby="privacy" className="card-charcoal mt-24 p-8 sm:p-10">
