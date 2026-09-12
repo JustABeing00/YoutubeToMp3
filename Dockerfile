@@ -62,6 +62,11 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+# NEXT_PUBLIC_* values are inlined at build time (pages are prerendered), so
+# the production image bakes the apex URL by default. Override per-environment
+# with --build-arg (e.g. staging preview URLs).
+ARG NEXT_PUBLIC_SITE_URL=https://kharb.online
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 RUN npm run build
 
 ENV NODE_ENV=production
