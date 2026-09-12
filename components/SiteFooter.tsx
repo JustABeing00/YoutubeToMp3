@@ -28,7 +28,7 @@ const COLS: { heading: string; links: { href: string; label: string }[] }[] = [
 
 export function SiteFooter() {
   return (
-    <footer className="bg-canvas px-8 py-16">
+    <footer className="border-t border-hairlinesoft bg-transparent px-8 py-16">
       <div className="mx-auto w-full max-w-canvas">
         <div className="grid gap-10 md:grid-cols-[1.2fr_repeat(3,1fr)]">
           <div>

@@ -177,6 +177,18 @@ body {
   .faq-row {
     border-bottom: 1px solid var(--hairline-soft);
   }
+
+  /* Full-viewport particle network (fixed, behind content) */
+  .particle-bg {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
+    background: transparent;
+    z-index: 1;
+  }
 }
 
 @keyframes rise {

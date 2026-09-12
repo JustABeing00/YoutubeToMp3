@@ -3,7 +3,7 @@ import Link from "next/link";
 /** Shared shell for informational pages: Framer canvas, poster title, hairline rhythm. */
 export function InfoPage({ title, intro, children }: { title: string; intro?: string; children: React.ReactNode }) {
   return (
-    <main className="mx-auto w-full max-w-canvas bg-canvas px-5 py-16 sm:py-24">
+    <main className="mx-auto w-full max-w-canvas bg-transparent px-5 py-16 sm:py-24">
       <div className="mx-auto max-w-2xl">
         <h1 className="display-lg text-balance text-ink">{title}</h1>
         {intro ? <p className="subhead mt-5 text-pretty text-inkmuted">{intro}</p> : null}

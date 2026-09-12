@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <main className="mx-auto w-full max-w-canvas bg-canvas px-5 py-24 text-center">
+    <main className="mx-auto w-full max-w-canvas bg-transparent px-5 py-24 text-center">
       <h1 className="display-lg text-ink">Page Not Found</h1>
       <p className="body-lg mx-auto mt-4 max-w-md">
         The page you&apos;re looking for doesn&apos;t exist. It may have been moved, or you may have followed an

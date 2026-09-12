@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export default function Error({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
-    <main className="mx-auto w-full max-w-canvas bg-canvas px-5 py-24 text-center">
+    <main className="mx-auto w-full max-w-canvas bg-transparent px-5 py-24 text-center">
       <h1 className="display-lg text-ink">Something went wrong</h1>
       <p className="body-lg mx-auto mt-4 max-w-md">
         The page hit an unexpected error. Your conversions are unaffected — temporary files expire on their normal

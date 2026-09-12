@@ -72,7 +72,7 @@ const WHY = [
 
 export default function Home() {
   return (
-    <main className="bg-canvas pb-24">
+    <main className="bg-transparent pb-24">
       {/* HERO — one assertive poster statement */}
       <section className="mx-auto w-full max-w-canvas px-5 pt-16 text-center sm:pt-24">
         <p className="mx-auto inline-flex items-center gap-2 rounded-full bg-surface1 px-[14px] py-2 text-[13px] font-medium tracking-[-0.13px] text-inkmuted">
@@ -173,13 +173,13 @@ export default function Home() {
           </p>
         </section>
 
-        {/* GRADIENT SPOTLIGHT — the one atmosphere tile */}
-        <section aria-labelledby="privacy" className="spotlight spotlight-violet mt-24">
-          <p className="text-[13px] font-medium uppercase tracking-[-0.13px] text-white/70">Privacy · Temporary files</p>
-          <h2 id="privacy" className="display-lg mt-4 max-w-2xl text-balance text-white">
+        {/* PRIVACY — charcoal card, same system as the rest of the site */}
+        <section aria-labelledby="privacy" className="card-charcoal mt-24 p-8 sm:p-10">
+          <p className="eyebrow text-inkmuted">Privacy · Temporary files</p>
+          <h2 id="privacy" className="display-lg mt-4 max-w-2xl text-balance text-ink">
             Nothing kept. Everything expires.
           </h2>
-          <p className="subhead mt-5 max-w-2xl text-white/85">
+          <p className="subhead mt-5 max-w-2xl text-inkmuted">
             Source material is deleted the moment transcoding finishes. Finished MP3s expire after about 30 minutes.
             Cancelling wipes files immediately.
           </p>
@@ -192,7 +192,7 @@ export default function Home() {
             </Link>
             <Link
               href="/terms"
-              className="inline-flex min-h-[44px] items-center rounded-full bg-surface2 px-[15px] py-2.5 text-sm font-medium tracking-[-0.14px] text-white transition hover:brightness-125 active:scale-[0.97]"
+              className="inline-flex min-h-[44px] items-center rounded-full bg-surface2 px-[15px] py-2.5 text-sm font-medium tracking-[-0.14px] text-ink transition hover:brightness-125 active:scale-[0.97]"
             >
               Terms of service
             </Link>
