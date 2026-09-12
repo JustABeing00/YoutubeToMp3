@@ -201,14 +201,14 @@ export function Converter() {
         : undefined;
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4">
-      {/* URL form */}
+    <div id="converter" className="mx-auto w-full max-w-2xl scroll-mt-24 px-4">
+      {/* URL form — product-mockup-tile on canvas */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
           void analyze(url);
         }}
-        className="mt-8"
+        className="card-charcoal mt-8 p-4 sm:p-5"
       >
         <label htmlFor="video-url" className="sr-only">
           Video URL
@@ -227,7 +227,7 @@ export function Converter() {
                 setUrl(e.target.value);
                 if (hint) setHint(null);
               }}
-              className="w-full rounded-full border border-neutral-300 bg-white py-3 pl-5 pr-11 text-[15px] shadow-sm transition placeholder:text-neutral-400 hover:border-neutral-400 focus:border-neutral-900 focus:outline-none dark:border-neutral-700 dark:bg-neutral-900 dark:hover:border-neutral-600 dark:focus:border-white"
+              className="framer-input w-full py-3 pl-5 pr-11"
             />
             {url && (
               <button
@@ -237,7 +237,7 @@ export function Converter() {
                   setHint(null);
                 }}
                 aria-label="Clear URL"
-                className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700 dark:hover:bg-neutral-800 dark:hover:text-neutral-200"
+                className="absolute right-2 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-inkmuted transition hover:bg-surface2 hover:text-ink"
               >
                 ✕
               </button>
@@ -247,8 +247,18 @@ export function Converter() {
             Analyze
           </Button>
         </div>
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+          {["youtu.be", "Shorts", "Embeds", "music.youtube.com"].map((t) => (
+            <span
+              key={t}
+              className="rounded-full bg-surface2 px-3 py-1 text-xs font-medium tracking-[-0.12px] text-inkmuted"
+            >
+              {t}
+            </span>
+          ))}
+        </div>
       </form>
-      <p className="mt-3 text-center text-xs text-neutral-500 dark:text-neutral-500">
+      <p className="mt-3 text-center text-xs font-normal tracking-[-0.12px] text-inkmuted">
         Only convert media you own or have permission to download. Files auto-delete after ~30 minutes.
       </p>
 
@@ -258,7 +268,7 @@ export function Converter() {
       </div>
 
       {hint && phase.name === "idle" && (
-        <p className="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-center text-sm dark:border-neutral-800 dark:bg-neutral-900">
+        <p className="mt-4 rounded-[10px] bg-surface1 px-4 py-3 text-center text-sm tracking-[-0.15px] text-ink">
           {hint}
         </p>
       )}
@@ -276,24 +286,24 @@ export function Converter() {
         )}
 
         {phase.name === "working" && (
-          <div className="animate-rise rounded-2xl border border-neutral-200 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="card-featured animate-rise p-5">
             <div className="flex items-center gap-3">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800" aria-hidden>
-                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-surface2" aria-hidden>
+                <svg className="h-4 w-4 animate-spin text-ink" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25" />
                   <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                 </svg>
               </span>
               <div>
-                <p className="text-sm font-medium capitalize">{phase.status.replace(/_/g, " ")}</p>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400">{phase.stage}</p>
+                <p className="text-sm font-medium capitalize tracking-[-0.14px] text-ink">{phase.status.replace(/_/g, " ")}</p>
+                <p className="text-sm tracking-[-0.14px] text-inkmuted">{phase.stage}</p>
               </div>
             </div>
             <div className="mt-4">
               <Progress value={phase.progress} label="Conversion progress" />
             </div>
             <div className="mt-4 flex justify-end">
-              <Button variant="danger" onClick={() => void cancel()}>
+              <Button variant="secondary" onClick={() => void cancel()}>
                 Cancel conversion
               </Button>
             </div>
@@ -301,10 +311,10 @@ export function Converter() {
         )}
 
         {phase.name === "done" && (
-          <div className="animate-rise rounded-2xl border border-green-200 bg-green-50/60 p-5 dark:border-green-900 dark:bg-green-950/30">
-            <p className="text-sm font-semibold text-green-800 dark:text-green-300">✓ Conversion complete</p>
-            <p className="mt-1 break-all text-sm font-medium">{phase.filename}</p>
-            <p className="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400">
+          <div className="card-featured animate-rise p-5">
+            <p className="text-sm font-semibold tracking-[-0.14px] text-ink">✓ Conversion complete</p>
+            <p className="mt-1 break-all text-sm font-medium tracking-[-0.14px] text-ink">{phase.filename}</p>
+            <p className="mt-0.5 text-sm tracking-[-0.14px] text-inkmuted">
               {formatBytes(phase.bytes)}
               {phase.duration != null ? ` · ${Math.floor(phase.duration / 60)}:${String(Math.floor(phase.duration % 60)).padStart(2, "0")}` : ""}
               {" · "}expires soon
@@ -313,7 +323,7 @@ export function Converter() {
               <a
                 href={phase.downloadUrl}
                 download={phase.filename}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-neutral-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-neutral-700 active:scale-[0.98] dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
+                className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-medium tracking-[-0.14px] text-black transition hover:bg-neutral-200 active:scale-[0.98]"
               >
                 ⬇ Download MP3
               </a>
@@ -325,9 +335,9 @@ export function Converter() {
         )}
 
         {phase.name === "error" && (
-          <div className="animate-rise rounded-2xl border border-red-200 bg-red-50/60 p-5 dark:border-red-900 dark:bg-red-950/30" role="alert">
-            <p className="text-sm font-semibold text-red-800 dark:text-red-300">Something didn&apos;t work</p>
-            <p className="mt-1 text-sm text-red-700 dark:text-red-200">{phase.message}</p>
+          <div className="card-charcoal animate-rise p-5" role="alert">
+            <p className="text-sm font-semibold tracking-[-0.14px] text-ink">Something didn&apos;t work</p>
+            <p className="mt-1 text-sm tracking-[-0.14px] text-inkmuted">{phase.message}</p>
             <div className="mt-4 flex gap-2">
               <Button variant="secondary" onClick={reset}>
                 Try another URL

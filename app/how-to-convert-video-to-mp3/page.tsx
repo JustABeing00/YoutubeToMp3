@@ -70,30 +70,30 @@ export default function HowToPage() {
         <H2 id="troubleshooting">Troubleshooting</H2>
         <div className="mt-2 space-y-3">
           <P>
-            <strong className="text-neutral-900 dark:text-neutral-100">“Unsupported source.”</strong> The link is not
+            <strong className="text-ink">“Unsupported source.”</strong> The link is not
             from a supported host. Standard YouTube addresses work; most other sites do not.
           </P>
           <P>
-            <strong className="text-neutral-900 dark:text-neutral-100">“Couldn&apos;t fetch information.”</strong> The
+            <strong className="text-ink">“Couldn&apos;t fetch information.”</strong> The
             video may be private, deleted, age-restricted, or region-blocked. Confirm it plays in a signed-out browser
             window and try again.
           </P>
           <P>
-            <strong className="text-neutral-900 dark:text-neutral-100">“Requires sign-in.”</strong> Videos behind a
+            <strong className="text-ink">“Requires sign-in.”</strong> Videos behind a
             login cannot be converted. Only public content you are allowed to download will work.
           </P>
           <P>
-            <strong className="text-neutral-900 dark:text-neutral-100">“Too large” or duration errors.</strong> The
+            <strong className="text-ink">“Too large” or duration errors.</strong> The
             video exceeds the configured duration or size limits. Try a shorter video.
           </P>
           <P>
-            <strong className="text-neutral-900 dark:text-neutral-100">Time-outs and retrieval failures.</strong>{" "}
+            <strong className="text-ink">Time-outs and retrieval failures.</strong>{" "}
             Upstream platforms throttle automated downloads, especially from data-center networks. Waiting a few
             minutes and retrying — ideally with a shorter video — often succeeds. Repeated rapid retries can extend a
             cooldown, so pace your attempts.
           </P>
           <P>
-            <strong className="text-neutral-900 dark:text-neutral-100">“Too often, wait a moment.”</strong> You hit a
+            <strong className="text-ink">“Too often, wait a moment.”</strong> You hit a
             rate limit (roughly 20 analyses per minute or 10 conversions per hour per address). Pause briefly and
             continue.
           </P>

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { InfoPage, InlineLink } from "@/components/InfoPage";
 import { faqJsonLd, pageMeta } from "@/lib/seo";
 
@@ -100,28 +99,22 @@ export default function FaqPage() {
       intro="Everything about converting videos to MP3 with Kharb: supported links, temporary storage, quality settings, errors, and the rules that keep the service legitimate."
     >
       {GROUPS.map((g) => (
-        <section key={g.heading} aria-label={g.heading}>
-          <h2 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">{g.heading}</h2>
-          <div className="mt-3 space-y-5">
+        <section key={g.heading} aria-label={g.heading} className="faq-row py-8 first:pt-0">
+          <h2 className="text-[22px] font-bold leading-[1.2] tracking-[-0.8px] text-ink">{g.heading}</h2>
+          <div className="mt-4 space-y-5">
             {g.items.map((f) => (
               <div key={f.q}>
-                <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{f.q}</h3>
+                <h3 className="text-[15px] font-medium leading-[1.3] tracking-[-0.15px] text-ink">{f.q}</h3>
                 <p className="mt-1">{f.a}</p>
               </div>
             ))}
           </div>
         </section>
       ))}
-      <p className="text-sm">
+      <p className="pt-8 text-sm">
         New to the tool? Read <InlineLink href="/how-to-convert-video-to-mp3">how to convert a video to MP3</InlineLink>{" "}
         step by step, or <InlineLink href="/">convert a video to MP3 with our website</InlineLink> right away. Anything
-        unresolved can go to the <Link
-          href="/contact"
-          className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:text-neutral-100"
-        >
-          contact page
-        </Link>
-        .
+        unresolved can go to the <InlineLink href="/contact">contact page</InlineLink>.
       </p>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(flat)) }} />
     </InfoPage>

@@ -2,23 +2,181 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Framer DESIGN.md — dark-canvas marketing system. Dark only, no light mode. */
+
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
+  --canvas: #090909;
+  --surface-1: #141414;
+  --surface-2: #1c1c1c;
+  --hairline: #262626;
+  --hairline-soft: #1a1a1a;
+  --ink: #ffffff;
+  --ink-muted: #999999;
+  --accent-blue: #0099ff;
+  --g-magenta: #d44df0;
+  --g-violet: #6a4cf5;
+  --g-orange: #ff7a3d;
+  --g-coral: #ff5577;
+}
+
+html {
+  background: var(--canvas);
 }
 
 body {
-  @apply bg-white text-neutral-900 antialiased dark:bg-neutral-950 dark:text-neutral-100;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: "Inter", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "cv01", "cv05", "cv09", "cv11", "ss03", "ss07", "dlig", "tnum";
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 ::selection {
-  @apply bg-neutral-900 text-white dark:bg-white dark:text-neutral-900;
+  background: #ffffff;
+  color: #000000;
 }
 
-/* Visible, consistent focus for keyboard users */
+/* Framer focus = subtle blue ring, never an outline box */
 :focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline: none;
+  box-shadow: 0 0 0 1px rgba(0, 153, 255, 0.55), 0 0 0 4px rgba(0, 153, 255, 0.15);
+  border-radius: 6px;
+}
+
+@layer components {
+  /* Display type — GT Walsheim substitute: Inter 500/600 with poster tracking */
+  .display-xxl {
+    font-family: "Inter", "Inter Variable", "GT Walsheim Medium", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 500;
+    font-size: clamp(48px, 9vw, 110px);
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+    font-feature-settings: "ss02", "cv11";
+  }
+  .display-xl {
+    font-family: "Inter", "Inter Variable", "GT Walsheim Medium", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 500;
+    font-size: clamp(40px, 6.5vw, 85px);
+    line-height: 0.95;
+    letter-spacing: -0.05em;
+    font-feature-settings: "ss02";
+  }
+  .display-lg {
+    font-family: "Inter", "Inter Variable", "GT Walsheim Medium", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 500;
+    font-size: clamp(34px, 5vw, 62px);
+    line-height: 1;
+    letter-spacing: -0.05em;
+    font-feature-settings: "ss02";
+  }
+  .display-md {
+    font-family: "Inter", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+    font-weight: 500;
+    font-size: 32px;
+    line-height: 1.13;
+    letter-spacing: -0.031em;
+  }
+  @media (max-width: 810px) {
+    .display-md {
+      font-size: 26px;
+    }
+  }
+
+  .subhead {
+    font-size: 24px;
+    line-height: 1.3;
+    letter-spacing: -0.01px;
+  }
+  .body-lg {
+    font-size: 18px;
+    line-height: 1.3;
+    letter-spacing: -0.18px;
+    color: var(--ink-muted);
+  }
+  .eyebrow {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.13px;
+    text-transform: uppercase;
+  }
+
+  /* Framer hyperlink — the ONLY use of accent-blue */
+  .framer-link {
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .framer-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  /* Cards */
+  .card-charcoal {
+    background: var(--surface-1);
+    border-radius: 20px;
+    border-top: 0.5px solid rgba(255, 255, 255, 0.1);
+  }
+  .card-featured {
+    background: var(--surface-2);
+    border-radius: 20px;
+    border-top: 0.5px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Gradient spotlight cards — individual tiles, never section backgrounds */
+  .spotlight {
+    border-radius: 30px;
+    padding: 32px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+  }
+  .spotlight-violet {
+    background:
+      radial-gradient(120% 140% at 15% 10%, rgba(212, 77, 240, 0.85) 0%, rgba(212, 77, 240, 0) 55%),
+      radial-gradient(130% 130% at 85% 90%, rgba(255, 122, 61, 0.5) 0%, rgba(255, 122, 61, 0) 55%),
+      linear-gradient(135deg, #2b1a6b 0%, #6a4cf5 55%, #3d2aa8 100%);
+  }
+  .spotlight-magenta {
+    background:
+      radial-gradient(120% 130% at 80% 15%, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 45%),
+      radial-gradient(140% 140% at 15% 85%, rgba(106, 76, 245, 0.7) 0%, rgba(106, 76, 245, 0) 60%),
+      linear-gradient(135deg, #a81e78 0%, #d44df0 55%, #7a2bf5 100%);
+  }
+  .spotlight-orange {
+    background:
+      radial-gradient(120% 130% at 20% 15%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 45%),
+      radial-gradient(130% 130% at 85% 85%, rgba(255, 85, 119, 0.65) 0%, rgba(255, 85, 119, 0) 60%),
+      linear-gradient(135deg, #b33a12 0%, #ff7a3d 55%, #c22e5b 100%);
+  }
+
+  /* Framer text input */
+  .framer-input {
+    background: var(--surface-1);
+    color: var(--ink);
+    border-radius: 10px;
+    border: 1px solid transparent;
+    padding: 10px 14px;
+    font-size: 15px;
+    line-height: 1.3;
+    letter-spacing: -0.15px;
+  }
+  .framer-input::placeholder {
+    color: #666;
+  }
+  .framer-input:focus {
+    outline: none;
+    border-color: transparent;
+    box-shadow: 0 0 0 1px rgba(0, 153, 255, 0.55), 0 0 0 4px rgba(0, 153, 255, 0.15);
+  }
+
+  /* FAQ rows */
+  .faq-row {
+    border-bottom: 1px solid var(--hairline-soft);
+  }
 }
 
 @keyframes rise {

@@ -77,7 +77,7 @@ export default function TermsPage() {
         <H2 id="contact">Questions</H2>
         <P>
           Questions about these terms can be sent to{" "}
-          <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:text-neutral-100">
+          <a href={`mailto:${CONTACT_EMAIL}`} className="framer-link">
             {CONTACT_EMAIL}
           </a>
           . Also see the <InlineLink href="/privacy">privacy policy</InlineLink> and{" "}

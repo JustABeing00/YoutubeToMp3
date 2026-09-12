@@ -19,7 +19,7 @@ export default function ContactPage() {
           Write to{" "}
           <a
             href={`mailto:${CONTACT_EMAIL}`}
-            className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:text-neutral-100"
+            className="framer-link"
           >
             {CONTACT_EMAIL}
           </a>

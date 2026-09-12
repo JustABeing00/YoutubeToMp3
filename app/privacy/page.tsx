@@ -71,7 +71,7 @@ export default function PrivacyPage() {
           Because there are no accounts, there is no account data to export or delete — and because files expire
           automatically, the most effective privacy control is simply letting conversions lapse. If you have questions
           about this policy or believe something is being retained that should not be, contact the operator at{" "}
-          <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:text-neutral-100">
+          <a href={`mailto:${CONTACT_EMAIL}`} className="framer-link">
             {CONTACT_EMAIL}
           </a>
           . See also the <InlineLink href="/terms">terms of service</InlineLink> and the{" "}

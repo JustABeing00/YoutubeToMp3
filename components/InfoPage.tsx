@@ -1,29 +1,28 @@
 import Link from "next/link";
 
-/** Shared shell for informational pages: consistent width, rhythm, and return link. */
+/** Shared shell for informational pages: Framer canvas, poster title, hairline rhythm. */
 export function InfoPage({ title, intro, children }: { title: string; intro?: string; children: React.ReactNode }) {
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-14 sm:py-20">
-      <h1 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
-      {intro ? (
-        <p className="mt-4 text-pretty text-[15px] leading-relaxed text-neutral-500 dark:text-neutral-400">{intro}</p>
-      ) : null}
-      <div className="mt-8 space-y-8 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">{children}</div>
-      <p className="mt-10 border-t border-neutral-200/70 pt-6 text-sm dark:border-neutral-800/70">
-        <Link
-          href="/"
-          className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:text-neutral-100"
-        >
-          ← Back to the Kharb converter
-        </Link>
-      </p>
+    <main className="mx-auto w-full max-w-canvas bg-canvas px-5 py-16 sm:py-24">
+      <div className="mx-auto max-w-2xl">
+        <h1 className="display-lg text-balance text-ink">{title}</h1>
+        {intro ? <p className="subhead mt-5 text-pretty text-inkmuted">{intro}</p> : null}
+        <div className="mt-10 space-y-0 text-[15px] leading-[1.3] tracking-[-0.15px] text-inkmuted">
+          {children}
+        </div>
+        <p className="mt-12 border-t border-hairlinesoft pt-6 text-sm tracking-[-0.14px]">
+          <Link href="/" className="framer-link">
+            ← Back to the Kharb converter
+          </Link>
+        </p>
+      </div>
     </main>
   );
 }
 
 export function H2({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <h2 id={id} className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+    <h2 id={id} className="pt-8 text-[22px] font-bold leading-[1.2] tracking-[-0.8px] text-ink first:pt-0">
       {children}
     </h2>
   );
@@ -35,10 +34,7 @@ export function P({ children }: { children: React.ReactNode }) {
 
 export function InlineLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link
-      href={href}
-      className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:text-neutral-100"
-    >
+    <Link href={href} className="framer-link">
       {children}
     </Link>
   );

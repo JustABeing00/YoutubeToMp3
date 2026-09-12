@@ -45,12 +45,44 @@ const FAQS = [
   },
 ];
 
+const STEPS = [
+  {
+    n: "01",
+    title: "Paste & Analyze",
+    body: "Paste the video URL and select Analyze. The site validates the link, normalizes it to a canonical form, and fetches title, duration, author, and thumbnail so you confirm the right video.",
+  },
+  {
+    n: "02",
+    title: "Convert",
+    body: "Choose your audio quality and start the job. A background worker retrieves the source audio and transcodes it with FFmpeg — queued, retrieving, processing, finalizing — with real encoder progress.",
+  },
+  {
+    n: "03",
+    title: "Download",
+    body: "Get a temporary download link when the job completes. Source files are removed immediately after encoding and finished files expire automatically. Expired? Just run it again.",
+  },
+];
+
+const WHY = [
+  { title: "No sign-up", body: "The full workflow works without an account. No identity, no library, no profiles." },
+  { title: "Honest progress", body: "Status and percentage come from the actual job — queued to finalizing — not an animation." },
+  { title: "Your quality call", body: "Compact 128 kbps files up to 320 kbps for careful listening. 192 kbps by default." },
+  { title: "Temporary by design", body: "Working files and finished MP3s delete automatically on a schedule. Nothing to remember." },
+];
+
 export default function Home() {
   return (
-    <main className="pb-20">
-      <section className="mx-auto max-w-2xl px-4 pt-14 text-center sm:pt-20">
-        <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-5xl">Convert Video to MP3 Online</h1>
-        <p className="mx-auto mt-4 max-w-md text-pretty text-[15px] leading-relaxed text-neutral-500 dark:text-neutral-400">
+    <main className="bg-canvas pb-24">
+      {/* HERO — one assertive poster statement */}
+      <section className="mx-auto w-full max-w-canvas px-5 pt-16 text-center sm:pt-24">
+        <p className="mx-auto inline-flex items-center gap-2 rounded-full bg-surface1 px-[14px] py-2 text-[13px] font-medium tracking-[-0.13px] text-inkmuted">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#22c55e]" aria-hidden />
+          No accounts · Files delete themselves
+        </p>
+        <h1 className="display-xxl mx-auto mt-6 max-w-5xl text-balance text-ink">
+          Convert Video to MP3 Online
+        </h1>
+        <p className="body-lg mx-auto mt-6 max-w-xl text-pretty">
           Paste a link to content you own or have permission to download, choose a quality, and get an MP3. Nothing is
           kept — files delete themselves.
         </p>
@@ -58,174 +90,156 @@ export default function Home() {
 
       <Converter />
 
-      <div className="mx-auto max-w-2xl px-4">
-        <section aria-labelledby="what" className="mt-16">
-          <h2 id="what" className="text-lg font-semibold">
-            Fast, Simple Video to MP3 Conversion
+      <div className="mx-auto w-full max-w-canvas px-5">
+        {/* INTRO BAND */}
+        <section aria-labelledby="what" className="mt-24">
+          <p className="eyebrow text-inkmuted">What it does</p>
+          <h2 id="what" className="display-xl mt-4 max-w-3xl text-balance text-ink">
+            Fast, simple video to MP3 conversion
           </h2>
-          <div className="mt-3 space-y-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-            <p>
-              Kharb is an online MP3 converter with one job: turn a video link into an audio file you can keep. Paste a
-              supported link, check the title and duration that come back, pick a bitrate, and start the MP3
-              conversion. There is no account to create and no software to install — the whole no-account workflow
-              happens in your browser while the site handles retrieval and encoding.
-            </p>
-            <p>
-              Supported input is deliberately narrow. Standard YouTube links work, including youtu.be shortcuts, Shorts,
-              embeds, and music.youtube.com addresses; direct media files are accepted only from hosts the operator has
-              explicitly allowlisted. Anything else is rejected before anything is downloaded. If you are unsure about a
-              link, the step-by-step guide to{" "}
-              <Link
-                href="/how-to-convert-video-to-mp3"
-                className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:text-neutral-100"
-              >
-                convert a video to MP3 with our website
-              </Link>{" "}
-              shows exactly what to copy and where to paste it.
-            </p>
-            <p>
-              Output is a standard MP3 at the quality you select — 128, 192, 256, or 320 kbps — suitable for offline
-              listening on any phone, computer, or car stereo. People use online audio conversion for legitimate
-              everyday needs: archiving the sound from their own recordings, saving the audio of lectures and talks
-              they are allowed to keep, or carrying Creative Commons material without re-streaming the video. Whatever
-              you convert, only submit content you own or have permission to download.
-            </p>
-          </div>
-        </section>
-
-        <section aria-labelledby="how" className="mt-10">
-          <h2 id="how" className="text-lg font-semibold">
-            How It Works
-          </h2>
-          <div className="mt-3 space-y-5 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-            <div>
-              <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">Paste &amp; Analyze</h3>
-              <p className="mt-1">
-                Paste the video URL into the converter and select Analyze. The site validates the link, normalizes it
-                to a canonical form, and fetches the title, duration, author, and thumbnail so you can confirm it is
-                the right video before anything is retrieved.
+          <p className="subhead mt-5 max-w-2xl text-inkmuted">
+            One job: turn a video link into an audio file you can keep. No account, no software — right in your
+            browser.
+          </p>
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            <div className="card-charcoal p-8">
+              <p className="display-md text-ink">Narrow input, on purpose</p>
+              <p className="mt-3 text-[15px] leading-[1.3] tracking-[-0.15px] text-inkmuted">
+                Standard YouTube links work — youtu.be shortcuts, Shorts, embeds, music.youtube.com. Direct media
+                files only from explicitly allowlisted hosts. Anything else is rejected before anything downloads. The{" "}
+                <Link href="/how-to-convert-video-to-mp3" className="framer-link">
+                  step-by-step guide
+                </Link>{" "}
+                shows exactly what to copy and where to paste it.
               </p>
             </div>
-            <div>
-              <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">Convert</h3>
-              <p className="mt-1">
-                Choose your audio quality and start the job. A background worker retrieves the source audio and
-                transcodes it with FFmpeg at your chosen bitrate, reporting real progress from the encoder — queued,
-                retrieving, processing, then finalizing.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold text-neutral-900 dark:text-neutral-100">Download</h3>
-              <p className="mt-1">
-                When the job completes you get a temporary download link. Fetch the MP3 promptly: source files are
-                removed immediately after encoding, and finished files expire automatically. If a link has expired, just
-                run the conversion again.
+            <div className="card-charcoal p-8">
+              <p className="display-md text-ink">Standard MP3 out</p>
+              <p className="mt-3 text-[15px] leading-[1.3] tracking-[-0.15px] text-inkmuted">
+                Output at 128, 192, 256, or 320 kbps — ready for any phone, computer, or car stereo. Archive your own
+                recordings, save lectures you are allowed to keep, or carry Creative Commons material offline. Only
+                submit content you own or have permission to download.
               </p>
             </div>
           </div>
         </section>
 
-        <section aria-labelledby="why" className="mt-10">
-          <h2 id="why" className="text-lg font-semibold">
-            Why Use This Website?
+        {/* HOW IT WORKS */}
+        <section aria-labelledby="how" className="mt-24">
+          <p className="eyebrow text-inkmuted">How it works</p>
+          <h2 id="how" className="display-lg mt-4 text-balance text-ink">
+            Paste. Convert. Download.
           </h2>
-          <div className="mt-3 space-y-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-            <p>
-              The converter is built around restraint. There are no accounts, no permanent library, and no reason to
-              hand over personal details to extract audio from video. You submit a link, you get a file, and the traces
-              of the job are cleaned up on a schedule.
-            </p>
-            <ul className="list-disc space-y-1.5 pl-5">
-              <li>No sign-up: the full workflow works without an account.</li>
-              <li>Honest progress: status and percentage come from the actual job, not an animation.</li>
-              <li>Your choice of quality, from compact 128 kbps files to 320 kbps for careful listening.</li>
-              <li>Temporary by design: working files and finished MP3s are deleted automatically.</li>
-              <li>Works on desktop and mobile browsers with keyboard-accessible controls.</li>
-            </ul>
-            <p>
-              If something goes wrong, errors are stated plainly — an unsupported link, a private video, or a busy
-              server — instead of failing silently. Common cases are covered in the{" "}
-              <Link
-                href="/faq"
-                className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:text-neutral-100"
-              >
-                frequently asked questions
-              </Link>
-              .
-            </p>
-          </div>
-        </section>
-
-        <section aria-labelledby="privacy" className="mt-10">
-          <h2 id="privacy" className="text-lg font-semibold">
-            Privacy &amp; Temporary Files
-          </h2>
-          <div className="mt-3 space-y-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-            <p>
-              Submitted URLs, fetched metadata, and converted audio exist only to complete your conversion. Source
-              material is deleted as soon as transcoding finishes, and completed MP3s expire automatically — after
-              about 30 minutes with the default settings — through scheduled cleanup. Cancelling a job removes its
-              files immediately.
-            </p>
-            <p>
-              Operating the service still requires some routine processing: IP addresses are used for rate limiting and
-              abuse prevention, the server keeps operational logs, and a privacy-respecting analytics tag measures
-              aggregate usage. Repeat conversions may briefly reuse a bounded temporary cache so they finish faster.
-              The full details, including what is collected and how long traces remain, are in the{" "}
-              <Link
-                href="/privacy"
-                className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:text-neutral-100"
-              >
-                privacy policy
-              </Link>
-              , and the ground rules for acceptable use are in the{" "}
-              <Link
-                href="/terms"
-                className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:text-neutral-100"
-              >
-                terms of service
-              </Link>
-              .
-            </p>
-          </div>
-        </section>
-
-        <section aria-labelledby="faq" className="mt-10">
-          <h2 id="faq" className="text-lg font-semibold">
-            Frequently Asked Questions
-          </h2>
-          <div className="mt-3 space-y-5">
-            {FAQS.map((f) => (
-              <div key={f.q}>
-                <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{f.q}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">{f.a}</p>
+          <div className="mt-10 grid gap-4 md:grid-cols-3">
+            {STEPS.map((s) => (
+              <div key={s.n} className="card-charcoal p-8">
+                <p className="text-[13px] font-medium tracking-[-0.13px] text-inkmuted">{s.n}</p>
+                <p className="display-md mt-3 text-ink">{s.title}</p>
+                <p className="mt-3 text-[15px] leading-[1.3] tracking-[-0.15px] text-inkmuted">{s.body}</p>
               </div>
             ))}
           </div>
-          <p className="mt-5 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-            Still stuck? The dedicated{" "}
+        </section>
+
+        {/* WHY — charcoal grid */}
+        <section aria-labelledby="why" className="mt-24">
+          <p className="eyebrow text-inkmuted">Why Kharb</p>
+          <h2 id="why" className="display-lg mt-4 text-balance text-ink">
+            Built around restraint
+          </h2>
+          <div className="mt-10 grid gap-4 md:grid-cols-2">
+            {WHY.map((w) => (
+              <div key={w.title} className="card-charcoal flex gap-4 p-8">
+                <span
+                  className="mt-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#22c55e]/15 text-sm text-[#22c55e]"
+                  aria-hidden
+                >
+                  ✓
+                </span>
+                <div>
+                  <p className="text-[22px] font-bold leading-[1.2] tracking-[-0.8px] text-ink">{w.title}</p>
+                  <p className="mt-2 text-[15px] leading-[1.3] tracking-[-0.15px] text-inkmuted">{w.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-[15px] leading-[1.3] tracking-[-0.15px] text-inkmuted">
+            Errors are stated plainly — unsupported link, private video, busy server — instead of failing silently.
+            Common cases are covered in the{" "}
+            <Link href="/faq" className="framer-link">
+              frequently asked questions
+            </Link>
+            .
+          </p>
+        </section>
+
+        {/* GRADIENT SPOTLIGHT — the one atmosphere tile */}
+        <section aria-labelledby="privacy" className="spotlight spotlight-violet mt-24">
+          <p className="text-[13px] font-medium uppercase tracking-[-0.13px] text-white/70">Privacy · Temporary files</p>
+          <h2 id="privacy" className="display-lg mt-4 max-w-2xl text-balance text-white">
+            Nothing kept. Everything expires.
+          </h2>
+          <p className="subhead mt-5 max-w-2xl text-white/85">
+            Source material is deleted the moment transcoding finishes. Finished MP3s expire after about 30 minutes.
+            Cancelling wipes files immediately.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-2">
             <Link
-              href="/faq"
-              className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:text-neutral-100"
+              href="/privacy"
+              className="inline-flex min-h-[44px] items-center rounded-full bg-white px-[15px] py-2.5 text-sm font-medium tracking-[-0.14px] text-black transition hover:bg-neutral-200 active:scale-[0.97]"
             >
+              Read the privacy policy
+            </Link>
+            <Link
+              href="/terms"
+              className="inline-flex min-h-[44px] items-center rounded-full bg-surface2 px-[15px] py-2.5 text-sm font-medium tracking-[-0.14px] text-white transition hover:brightness-125 active:scale-[0.97]"
+            >
+              Terms of service
+            </Link>
+          </div>
+        </section>
+
+        {/* FAQ — faq-row accordions of hairline dividers */}
+        <section aria-labelledby="faq" className="mx-auto mt-24 max-w-3xl">
+          <p className="eyebrow text-center text-inkmuted">FAQ</p>
+          <h2 id="faq" className="display-lg mt-4 text-center text-balance text-ink">
+            Frequently asked questions
+          </h2>
+          <div className="mt-10">
+            {FAQS.map((f) => (
+              <div key={f.q} className="faq-row py-6">
+                <h3 className="text-[15px] font-medium leading-[1.3] tracking-[-0.15px] text-ink">{f.q}</h3>
+                <p className="mt-2 text-[15px] leading-[1.3] tracking-[-0.15px] text-inkmuted">{f.a}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-8 text-center text-[15px] leading-[1.3] tracking-[-0.15px] text-inkmuted">
+            Still stuck? See the{" "}
+            <Link href="/faq" className="framer-link">
               FAQ page
-            </Link>{" "}
-            expands on these answers, or learn{" "}
-            <Link
-              href="/about"
-              className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:text-neutral-100"
-            >
+            </Link>
+            ,{" "}
+            <Link href="/about" className="framer-link">
               more about Kharb
-            </Link>{" "}
-            and{" "}
-            <Link
-              href="/contact"
-              className="font-medium text-neutral-900 underline decoration-neutral-300 underline-offset-2 hover:decoration-neutral-500 dark:text-neutral-100"
-            >
+            </Link>
+            , or{" "}
+            <Link href="/contact" className="framer-link">
               get in touch
             </Link>
             .
           </p>
+        </section>
+
+        {/* FINAL CTA */}
+        <section className="mt-24 text-center">
+          <h2 className="display-lg mx-auto max-w-2xl text-balance text-ink">Ready when your link is</h2>
+          <p className="body-lg mx-auto mt-4 max-w-md">No sign-up. No installs. Just paste and convert.</p>
+          <Link
+            href="#converter"
+            className="mt-8 inline-flex min-h-[44px] items-center rounded-full bg-white px-8 py-3.5 text-sm font-medium tracking-[-0.14px] text-black transition hover:bg-neutral-200 active:scale-[0.97]"
+          >
+            Convert a video now
+          </Link>
         </section>
       </div>
 

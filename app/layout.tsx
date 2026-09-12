@@ -44,16 +44,13 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
-  ],
+  themeColor: [{ media: "(prefers-color-scheme: dark)", color: "#090909" }],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen">
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className="min-h-screen bg-canvas text-ink">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
