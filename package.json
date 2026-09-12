@@ -15,7 +15,6 @@
     "db:migrate": "tsx scripts/migrate.ts"
   },
   "dependencies": {
-    "@rolldown/binding-win32-x64-msvc": "^1.2.8",
     "next": "^16.3.4",
     "next-themes": "^0.3.0",
     "pino": "^9.5.0",

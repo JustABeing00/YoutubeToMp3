@@ -2,7 +2,7 @@
 # Cloudflare Workers CANNOT run this (no child_process, no filesystem,
 # 30s CPU limits). Deploy here instead: Fly.io / Render / Railway / any VPS.
 # See docs/deployment.md for the breakdown and free-tier picks.
-FROM node:20-bookworm-slim AS base
+FROM node:22-bookworm-slim AS base
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 ffmpeg curl ca-certificates \
  && rm -rf /var/lib/apt/lists/*
@@ -11,8 +11,8 @@ RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o 
  && chmod +x /usr/local/bin/yt-dlp
 
 WORKDIR /app
-COPY package.json ./
-RUN npm install
+COPY package.json package-lock.json ./
+RUN npm ci
 
 COPY . .
 RUN npm run build
