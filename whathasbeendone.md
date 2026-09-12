@@ -106,6 +106,23 @@ docker compose exec web yt-dlp --impersonate chrome --plugin-dirs /opt/yt-dlp-pl
 - Logs to watch: `[warp] proxy OK|probe failed`, `media.fallback_used`, `job.completed cached:true`, breaker cooldown failures.
 - Don't rapid-fire failing test videos — hammering deepens YouTube throttling.
 
-## 9. Git state (as of this doc)
-- Uncommitted: SEO batch (`app/*/`, `components/Site*`, `lib/seo.ts`, `public/`, layout/page/robots/sitemap/Converter/MetadataCard) + hardening (`Dockerfile`, `docker-compose.yml`, `next.config.mjs`, `.env.example`).
-- Planned: commit A = SEO batch; commit B = prod hardening (`Dockerfile docker-compose.yml next.config.mjs .env.example`); then `push` + VPS pull/rebuild. Never commit `.env`, `data/`, `*.db*`, `wgcf-profile.conf`, `node_modules/`, `.next/`.
+## 9. Git history (this session, oldest → newest)
+- `fix docker build for linux vps` → `fix youtube 403` chain (`deno`, `PO-token plugin`, `curl_cffi`) → `warp egress, oembed metadata, conversion cache, breaker` → `add google gtag` → `seo: 7 indexable pages` → `prod: apex site URL` → `docs: session handoff` → `security: lock in 2-year HSTS`.
+- Rule kept: never commit `.env`, `data/`, `*.db*`, `wgcf-profile.conf`, `node_modules/`, `.next/`.
+
+## 10. Problems hit & how each was fixed (chronological; cause → evidence → fix → verify)
+
+1. **Docker build failed** (`npm error Cannot read properties of null (reading 'edgesOut')`). Cause: `Dockerfile` copied only `package.json` (fresh resolve on old npm 10.8.2) + stray Windows-only `@rolldown/binding-win32-x64-msvc` dep. Fix: `COPY package.json package-lock.json` + `npm ci`, base `node:22-bookworm-slim`, removed win32 dep. Verified: image built, `✓ Ready`.
+2. **Feared SSL auto-renewal charges.** No bug: Let's Encrypt/Certbot is free with no card on file (`certbot renew --dry-run` passes). Only VPS + domain are paid.
+3. **Download `RETRIEVAL_FAILED` ("couldn't retrieve the source media").** Cause: YouTube IP-reputation gate — extraction, POT minting, and format URLs all succeeded, then `googlevideo.com` 403'd the bytes. Evidence chain: bare-yt-dlp 403 → android/ios SABR-empty (`Requested format is not available`) → tv (`needs reload`) / mweb 403 → Cloudflare-egress 100% in 4s. See §4–§5.
+4. **`--js-runtimes "node,deno"` silently ignored** (`Ignoring unsupported JavaScript runtime(s)`). yt-dlp treats comma-joined value as one name. Fix: single `--js-runtimes deno` (see `youtube-adapter.ts` `YT_BASE_ARGS`).
+5. **`--impersonate chrome` crashed** (`target not available`, urllib-only handlers). Cause: release zipapp lacks `curl_cffi`. Fix: `python3-pip` + `pip install curl_cffi pysocks` with build-time asserts (`import` + `--list-impersonate-targets | grep chrome`).
+6. **Piped/Invidious fallback dead ends.** Probed ~14 public instances live — all dead (525/502/403/401/DNS); Invidious API list showed zero `api:true` instances. Decision: kept `lib/media/fallback.ts` as best-effort insurance; POT + WARP are the real fix.
+7. **WARP registration `429` from Hostinger IP.** Cloudflare throttled `wgcf register`. Fix: profile minted on home PC (`wgcf.exe register --accept-tos` → `generate`, appended `[Socks5] BindAddress`), `scp` to VPS, `docker cp` into `/data/warp/`, restart — entrypoint skips registration when a profile exists. Verified: `[warp] proxy OK` + 100% download.
+8. **Wrong-directory compose errors** (`no configuration file provided`). Cause: ran from `~` instead of `/opt/kharb`. Rule (§8): compose only runs where `docker-compose.yml` lives.
+9. **Restart-log misread** (SIGTERM/npm-error lines). Those are the OLD process shutting down during `restart`, not a crash; the verdict lines (`[warp] ...`, `✓ Ready`) come after. Always re-read logs ~25s after restart.
+10. **VPS `docker-compose.yml` merge conflict** (`needs merge` + go-yaml `load error` from `<<<<<<<` markers). Cause: hand-edited tracked file on VPS while same lines changed in pushed commits. Recovery: `git checkout --theirs -- <file>` → verify intent line (`SITE_URL`) → `add`/`commit --no-edit` → `stash drop` → `docker compose config` check → rebuild. Rule: one-directional flow (PC → push → VPS pull); VPS-only values go in gitignored `.env`.
+11. **Localhost baked into SEO canonicals/sitemap.** Cause: compose `environment:` overrode `.env`, and `NEXT_PUBLIC_*` inlines at build time — restarts can't fix it. Fix: `Dockerfile` `ARG/ENV` (`https://kharb.online`) + compose apex URL + `up -d --build`. Verified in build output (7 apex canonicals/locs).
+12. **Caddy-vs-Nginx proposal rejected.** Working Nginx + Certbot + auto-renew stays; HSTS implemented in Next.js (`next.config.mjs`) to avoid double headers. No migration churn for zero SEO gain.
+13. **Search Console sitemap rejection** (`Invalid sitemap address`). Sitemap + robots verified healthy live — cause was form-side: **Domain properties require the full `https://kharb.online/sitemap.xml`**, bare `sitemap.xml` only works for URL-prefix properties.
+14. **HSTS staged rollout.** `max-age=300` first (5-minute undo window while proving HTTPS), then `max-age=63072000; includeSubDomains` after a clean day. `preload` deliberately excluded (effectively irreversible). Verified live via `curl -sI ... | grep -i strict-transport`.
