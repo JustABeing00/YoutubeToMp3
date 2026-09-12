@@ -20,10 +20,10 @@ const nextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-Frame-Options", value: "DENY" },
-          // Staged HSTS rollout: short max-age first to prove HTTPS is solid,
-          // then raise to "max-age=63072000; includeSubDomains". Never add
-          // "preload" until certain — HSTS preload is effectively irreversible.
-          { key: "Strict-Transport-Security", value: "max-age=300" },
+          // HSTS: HTTPS held clean through the staged rollout (max-age=300),
+          // so the full 2-year policy is now locked in. Never add "preload"
+          // casually — HSTS preload is effectively irreversible for months.
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
         ],
       },
     ];
