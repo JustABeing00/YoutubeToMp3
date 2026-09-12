@@ -4,7 +4,7 @@
 # See docs/deployment.md for the breakdown and free-tier picks.
 FROM node:22-bookworm-slim AS base
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 ffmpeg curl ca-certificates unzip git \
+    python3 python3-pip ffmpeg curl ca-certificates unzip git \
  && rm -rf /var/lib/apt/lists/*
 # Deno provides the JS runtime yt-dlp needs for YouTube's JS challenge.
 # The adapter passes --js-runtimes "deno" (single name — yt-dlp ignores
@@ -12,12 +12,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # (which degrades extraction) goes away.
 RUN curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh \
  && deno --version
-# yt-dlp static binary (no pip needed). Re-pulled on every --no-cache build,
+# yt-dlp release binary (no pip needed). Re-pulled on every --no-cache build,
 # so monthly rebuilds pick up YouTube fixes. Run `yt-dlp -U` inside the
 # container for an in-place update without rebuilding.
 RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp \
  && chmod +x /usr/local/bin/yt-dlp \
  && yt-dlp --version
+# The release binary is a zipapp on system Python, so optional deps come from
+# site-packages: curl_cffi gives yt-dlp its CurlCffi handler, without which
+# --impersonate fails ("Impersonate target chrome is not available") and
+# googlevideo sees a bot-like urllib fingerprint.
+RUN pip3 install --no-cache-dir --break-system-packages curl_cffi \
+ && python3 -c "import curl_cffi; print('curl_cffi', curl_cffi.__version__)" \
+ && yt-dlp --list-impersonate-targets | grep -qi chrome
 
 # PO-token stack for YouTube bot checks on flagged datacenter IPs (free, no
 # cookies, no proxy). Pinned provider release: bump ARG to upgrade both parts
