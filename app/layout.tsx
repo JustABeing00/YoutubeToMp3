@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ParticleBackground } from "@/components/ParticleBackground";
+import { PageTransition } from "@/components/PageTransition";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SITE_URL, SITE_NAME, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
@@ -68,6 +69,7 @@ gtag('config', 'G-70T5R1L88F');`}
         </Script>
         <ThemeProvider>
           <ParticleBackground />
+          <PageTransition />
           <div className="relative z-10 flex min-h-screen flex-col">
             <SiteHeader />
             <div className="flex-1">{children}</div>

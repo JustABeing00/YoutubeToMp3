@@ -178,6 +178,78 @@ body {
     border-bottom: 1px solid var(--hairline-soft);
   }
 
+  /* Claw-tear page transition (mew.xyz spirit, signal-blue variation).
+     Two full-screen panels with a 3-gash claw leading edge: blue rips in
+     first, black follows 110ms later leaving a blue slash edge — the tear.
+     Route swaps at full cover, then both wipe off the other side. */
+  .claw-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    overflow: hidden;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .claw-overlay[data-active="true"] {
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .claw-layer {
+    position: absolute;
+    top: -12%;
+    bottom: -12%;
+    left: -15%;
+    right: -15%;
+    transform: translateX(-115%);
+    will-change: transform;
+  }
+  .claw-blue {
+    background: var(--accent-blue);
+    clip-path: polygon(
+      0 0, 100% 0, 90% 9%, 97% 17%, 87% 30%, 96% 41%,
+      86% 55%, 95% 66%, 85% 79%, 94% 89%, 88% 100%, 0 100%
+    );
+  }
+  .claw-black {
+    background: #050505;
+    clip-path: polygon(
+      0 0, 100% 0, 90% 9%, 97% 17%, 87% 30%, 96% 41%,
+      86% 55%, 95% 66%, 85% 79%, 94% 89%, 88% 100%, 0 100%
+    );
+  }
+  .claw-overlay[data-phase="covering"] .claw-blue {
+    animation: claw-in 700ms cubic-bezier(0.19, 1, 0.22, 1) 0ms forwards;
+  }
+  .claw-overlay[data-phase="covering"] .claw-black {
+    animation: claw-in 700ms cubic-bezier(0.19, 1, 0.22, 1) 110ms forwards;
+  }
+  .claw-overlay[data-phase="holding"] .claw-blue,
+  .claw-overlay[data-phase="holding"] .claw-black {
+    transform: translateX(0);
+  }
+  .claw-overlay[data-phase="revealing"] .claw-black {
+    animation: claw-out 700ms cubic-bezier(0.19, 1, 0.22, 1) 0ms forwards;
+  }
+  .claw-overlay[data-phase="revealing"] .claw-blue {
+    animation: claw-out 700ms cubic-bezier(0.19, 1, 0.22, 1) 110ms forwards;
+  }
+  @keyframes claw-in {
+    from {
+      transform: translateX(-115%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+  @keyframes claw-out {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(115%);
+    }
+  }
+
   /* Full-viewport particle network (fixed, behind content) */
   .particle-bg {
     position: fixed;
@@ -224,5 +296,8 @@ body {
   .animate-rise,
   .animate-pulse-soft {
     animation: none;
+  }
+  .claw-overlay {
+    display: none;
   }
 }
