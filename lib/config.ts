@@ -34,6 +34,15 @@ const envSchema = z.object({
   // fingerprint + PO-token plugin dir; leave empty on machines whose yt-dlp
   // lacks curl_cffi or the plugin.
   YTDLP_EXTRA_ARGS: z.string().default(""),
+  // SOCKS/HTTP proxy URL for all yt-dlp traffic (e.g. the WARP sidecar at
+  // socks5h://127.0.0.1:1080). Empty = direct egress. Managed at runtime by
+  // scripts/warp-entrypoint.sh; override with WARP_ENABLED=false to disable.
+  YTDLP_PROXY: z.string().default(""),
+  // Persistent conversion cache (videoId+bitrate) + cooldown breaker.
+  CACHE_MAX_MB: z.coerce.number().int().min(100).max(20000).default(2000),
+  CACHE_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(168),
+  BREAKER_THRESHOLD: z.coerce.number().int().min(2).max(50).default(5),
+  BREAKER_COOLDOWN_MIN: z.coerce.number().int().min(1).max(240).default(30),
 });
 
 export type AppConfig = z.infer<typeof envSchema>;

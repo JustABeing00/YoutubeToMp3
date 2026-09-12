@@ -7,6 +7,7 @@
  */
 import { getConfig } from "@/lib/config";
 import { jobStore } from "@/lib/jobs/store";
+import { sweepCache } from "@/lib/jobs/cache";
 import { removeJobDir, sweepStaleDirs, jobDir } from "@/lib/storage/files";
 import { logEvent } from "@/lib/logging/logger";
 import fs from "node:fs/promises";
@@ -41,7 +42,10 @@ export async function runCleanup() {
   } catch {}
 
   logEvent("cleanup.completed", { expired, removedDirs: removed });
-  return { expired, removedDirs: removed };
+  // Bound the persistent conversion cache (TTL + size cap, oldest first).
+  const sweptCache = await sweepCache(cfg.CACHE_MAX_MB * 1024 * 1024, cfg.CACHE_TTL_HOURS * 3_600_000);
+  logEvent("cleanup.cache", { swept: sweptCache.length });
+  return { expired, removedDirs: removed, sweptCache: sweptCache.length };
 }
 
 if (require.main === module) {

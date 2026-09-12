@@ -6,6 +6,8 @@ import { canTransition, stageText, type InputMetadata, type Job } from "@/lib/jo
 import { jobStore } from "@/lib/jobs/store";
 import { ensureJobDirs, outputFile, outputDir, sourceDir, removeJobDir, removeSourceFiles } from "@/lib/storage/files";
 import { pickAdapter, AdapterError } from "@/lib/media/youtube-adapter";
+import { cacheKey, readCache, videoIdOf, writeCache } from "@/lib/jobs/cache";
+import { breakerAllows, breakerReport } from "@/lib/jobs/breaker";
 import { transcodeToMp3, verifyMp3 } from "@/lib/ffmpeg/transcode";
 import { sanitizeFilename } from "@/lib/validation/filename";
 import { logEvent, logError } from "@/lib/logging/logger";
@@ -123,6 +125,17 @@ async function runJob(id: string) {
     const maxBytes = cfg.MAX_FILE_MB * 1024 * 1024;
     const timeoutMs = cfg.PROCESSING_TIMEOUT_MIN * 60_000;
 
+    // BREAKER — after repeated upstream blocks, fail fast with a clear
+    // cooldown message instead of hammering (hammering deepens throttling).
+    if (job.source === "youtube" && !breakerAllows()) {
+      await setJob(id, {
+        status: "failed",
+        errorCode: "RATE_LIMITED",
+        errorMessage: "YouTube downloads are cooling down after repeated blocks. Please retry in a few minutes.",
+      });
+      return;
+    }
+
     // ANALYZING — refresh metadata inside the worker so progress is truthful
     // even when the job waited in the queue after /api/analyze.
     await setJob(id, { status: "analyzing", progress: 3 });
@@ -139,6 +152,40 @@ async function runJob(id: string) {
     } catch (e) {
       if (signal.aborted) return;
       throw e;
+    }
+
+    // CACHE — repeat conversions skip YouTube entirely (seconds, not minutes).
+    // Verified BEFORE any status transition: a corrupt entry is deleted and
+    // the job falls through to the normal pipeline (still analyzing→…).
+    if (job.source === "youtube") {
+      const vid = videoIdOf(job.sourceUrl);
+      const key = vid && cacheKey(vid, job.bitrate);
+      const hit = key ? await readCache(key) : null;
+      if (hit && key) {
+        try {
+          const title = (await jobStore.get(id))?.input?.title ?? "audio";
+          const filename = sanitizeFilename(title);
+          const outPath = outputFile(id, filename);
+          await fs.mkdir(outputDir(id), { recursive: true });
+          await fs.copyFile(hit, outPath);
+          const verified = await verifyMp3(outPath);
+          // Walk the legal transition chain (analyzing→retrieving→processing→
+          // finalizing→completed) so status subscribers see a truthful sprint.
+          await setJob(id, { status: "retrieving", progress: 40 });
+          await setJob(id, { status: "processing", progress: 70 });
+          await setJob(id, { status: "finalizing", progress: 94 });
+          await setJob(id, {
+            status: "completed",
+            progress: 100,
+            output: { filename, bytes: verified.bytes, duration: verified.duration, bitrate: job.bitrate },
+          });
+          breakerReport(true);
+          logEvent("job.completed", { jobId: id, cached: true, bytes: verified.bytes });
+          return;
+        } catch {
+          await fs.rm(hit, { force: true }).catch(() => {});
+        }
+      }
     }
 
     // RETRIEVING — real downloader percentage 8% -> 35%.
@@ -196,11 +243,18 @@ async function runJob(id: string) {
     }
     const verified = await verifyMp3(outPath);
     const totalMs = Date.now() - started;
+    // Persist successful YouTube conversions for instant repeat serving.
+    if (job.source === "youtube") {
+      const vid = videoIdOf(job.sourceUrl);
+      const key = vid && cacheKey(vid, job.bitrate);
+      if (key) await writeCache(key, outPath).catch(() => {});
+    }
     await setJob(id, {
       status: "completed",
       progress: 100,
       output: { filename, bytes: verified.bytes, duration: verified.duration, bitrate: job.bitrate },
     });
+    breakerReport(true);
     logEvent("job.completed", { jobId: id, durationMs: totalMs, bytes: verified.bytes });
   } catch (e) {
     const cur = await jobStore.get(id);
@@ -208,6 +262,9 @@ async function runJob(id: string) {
     const code = e instanceof AdapterError ? e.code : "SERVER_ERROR";
     const message =
       e instanceof AdapterError ? e.message : "Unexpected error during conversion.";
+    if (cur.source === "youtube" && ["RETRIEVAL_FAILED", "TIMEOUT", "SOURCE_UNAVAILABLE"].includes(code)) {
+      breakerReport(false);
+    }
     await setJob(id, { status: "failed", errorCode: code, errorMessage: message });
     logError("job.failed", e, { jobId: id, code });
     await removeJobDir(id).catch(() => {});

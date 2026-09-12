@@ -8,7 +8,9 @@ export type { DownloadResult, MediaMetadata, MediaSourceAdapter };
 import { getConfig } from "@/lib/config";
 import { assertUrlSafe } from "@/lib/security/ssrf";
 import { logError, logEvent } from "@/lib/logging/logger";
+import { extractYoutubeId } from "@/lib/validation/url";
 import { resolveFallbackAudioUrl } from "./fallback";
+import { fetchOEmbed } from "./oembed";
 
 /**
  * YouTube adapter backed by yt-dlp. All invocations use spawn() with an
@@ -50,6 +52,12 @@ const YT_BASE_ARGS = [
 function extraArgs(): string[] {
   const raw = getConfig().YTDLP_EXTRA_ARGS.trim();
   return raw ? raw.split(/\s+/) : [];
+}
+
+/** Proxy argv for all yt-dlp traffic (WARP sidecar). Empty when disabled. */
+function proxyArgs(): string[] {
+  const p = getConfig().YTDLP_PROXY.trim();
+  return p ? ["--proxy", p] : [];
 }
 
 function run(cmd: string, args: string[], timeoutMs: number): Promise<{ stdout: string; stderr: string }> {
@@ -117,30 +125,48 @@ export class YoutubeAdapter implements MediaSourceAdapter {
 
   async getMetadata(url: string): Promise<MediaMetadata> {
     const { YTDLP_PATH } = getConfig();
-    const { stdout } = await run(
-      YTDLP_PATH,
-      [...YT_BASE_ARGS, ...extraArgs(), "--skip-download", "--dump-single-json", "--", url],
-      45_000
-    );
-    let data: YtDlpJson;
+    // oEmbed first: free, unlimited, never IP-blocked. yt-dlp then fills in
+    // duration/availability; if yt-dlp is throttled, oEmbed data still lets
+    // Analyze succeed (duration unknown) instead of hard-failing.
+    let videoId: string | null = null;
     try {
-      data = JSON.parse(stdout) as YtDlpJson;
+      videoId = extractYoutubeId(new URL(url));
     } catch {
-      throw new AdapterError("METADATA_UNAVAILABLE", "Could not parse video information.");
+      videoId = null;
     }
-    if (data.availability === "private" || data.availability === "needs_auth") {
+    const embed = videoId ? await fetchOEmbed(videoId) : null;
+    let data: YtDlpJson | null = null;
+    try {
+      const { stdout } = await run(
+        YTDLP_PATH,
+        [...YT_BASE_ARGS, ...extraArgs(), ...proxyArgs(), "--skip-download", "--dump-single-json", "--", url],
+        45_000
+      );
+      try {
+        data = JSON.parse(stdout) as YtDlpJson;
+      } catch {
+        throw new AdapterError("METADATA_UNAVAILABLE", "Could not parse video information.");
+      }
+    } catch (e) {
+      if (!embed) throw e;
+      data = null;
+    }
+    if (data && (data.availability === "private" || data.availability === "needs_auth")) {
       throw new AdapterError("AUTH_REQUIRED", "This video is private or requires sign-in.");
     }
     const duration =
-      typeof data.duration === "number" && Number.isFinite(data.duration) && data.duration >= 0
+      data && typeof data.duration === "number" && Number.isFinite(data.duration) && data.duration >= 0
         ? Math.floor(data.duration)
         : null;
+    const rawTitle =
+      (data && typeof data.title === "string" && data.title.trim()) || embed?.title || "Untitled video";
     return {
-      title: typeof data.title === "string" && data.title.trim() ? data.title.trim().slice(0, 300) : "Untitled video",
+      title: rawTitle.trim().slice(0, 300),
       duration,
-      thumbnail: typeof data.thumbnail === "string" ? data.thumbnail : null,
+      thumbnail:
+        (data && typeof data.thumbnail === "string" ? data.thumbnail : null) ?? embed?.thumbnail ?? null,
       source: "YouTube",
-      author: data.channel ?? data.uploader ?? null,
+      author: (data && (data.channel ?? data.uploader)) || embed?.author || null,
       available: true,
     };
   }
@@ -205,6 +231,7 @@ export class YoutubeAdapter implements MediaSourceAdapter {
         [
           ...YT_BASE_ARGS,
           ...extraArgs(),
+          ...proxyArgs(),
           "-f",
           "bestaudio/best",
           "--no-part",
