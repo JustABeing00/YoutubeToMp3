@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Converter } from "@/components/Converter";
+import { Reveal } from "@/components/Reveal";
 import { faqJsonLd } from "@/lib/seo";
 
 const FAQS = [
@@ -79,9 +80,9 @@ export default function Home() {
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#22c55e]" aria-hidden />
           No accounts · Files delete themselves
         </p>
-        <h1 className="display-xxl mx-auto mt-6 max-w-5xl text-balance text-ink">
+        <Reveal as="h1" className="display-xxl mx-auto mt-6 max-w-5xl text-balance text-ink">
           Convert Video to MP3 Online
-        </h1>
+        </Reveal>
         <p className="body-lg mx-auto mt-6 max-w-xl text-pretty">
           Paste a link to content you own or have permission to download, choose a quality, and get an MP3. Nothing is
           kept — files delete themselves.
@@ -94,9 +95,9 @@ export default function Home() {
         {/* INTRO BAND */}
         <section aria-labelledby="what" className="mt-24">
           <p className="eyebrow text-inkmuted">What it does</p>
-          <h2 id="what" className="display-xl mt-4 max-w-3xl text-balance text-ink">
+          <Reveal as="h2" id="what" className="display-xl mt-4 max-w-3xl text-balance text-ink">
             Fast, simple video to MP3 conversion
-          </h2>
+          </Reveal>
           <p className="subhead mt-5 max-w-2xl text-inkmuted">
             One job: turn a video link into an audio file you can keep. No account, no software — right in your
             browser.
@@ -127,9 +128,9 @@ export default function Home() {
         {/* HOW IT WORKS */}
         <section aria-labelledby="how" className="mt-24">
           <p className="eyebrow text-inkmuted">How it works</p>
-          <h2 id="how" className="display-lg mt-4 text-balance text-ink">
+          <Reveal as="h2" id="how" className="display-lg mt-4 text-balance text-ink">
             Paste. Convert. Download.
-          </h2>
+          </Reveal>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {STEPS.map((s) => (
               <div key={s.n} className="card-charcoal p-8">
@@ -144,9 +145,9 @@ export default function Home() {
         {/* WHY — charcoal grid */}
         <section aria-labelledby="why" className="mt-24">
           <p className="eyebrow text-inkmuted">Why Kharb</p>
-          <h2 id="why" className="display-lg mt-4 text-balance text-ink">
+          <Reveal as="h2" id="why" className="display-lg mt-4 text-balance text-ink">
             Built around restraint
-          </h2>
+          </Reveal>
           <div className="mt-10 grid gap-4 md:grid-cols-2">
             {WHY.map((w) => (
               <div key={w.title} className="card-charcoal flex gap-4 p-8">
@@ -176,9 +177,9 @@ export default function Home() {
         {/* PRIVACY — charcoal card, same system as the rest of the site */}
         <section aria-labelledby="privacy" className="card-charcoal mt-24 p-8 sm:p-10">
           <p className="eyebrow text-inkmuted">Privacy · Temporary files</p>
-          <h2 id="privacy" className="display-lg mt-4 max-w-2xl text-balance text-ink">
+          <Reveal as="h2" id="privacy" className="display-lg mt-4 max-w-2xl text-balance text-ink">
             Nothing kept. Everything expires.
-          </h2>
+          </Reveal>
           <p className="subhead mt-5 max-w-2xl text-inkmuted">
             Source material is deleted the moment transcoding finishes. Finished MP3s expire after about 30 minutes.
             Cancelling wipes files immediately.
@@ -202,9 +203,9 @@ export default function Home() {
         {/* FAQ — faq-row accordions of hairline dividers */}
         <section aria-labelledby="faq" className="mx-auto mt-24 max-w-3xl">
           <p className="eyebrow text-center text-inkmuted">FAQ</p>
-          <h2 id="faq" className="display-lg mt-4 text-center text-balance text-ink">
+          <Reveal as="h2" id="faq" className="display-lg mt-4 text-center text-balance text-ink">
             Frequently asked questions
-          </h2>
+          </Reveal>
           <div className="mt-10">
             {FAQS.map((f) => (
               <div key={f.q} className="faq-row py-6">
@@ -232,7 +233,7 @@ export default function Home() {
 
         {/* FINAL CTA */}
         <section className="mt-24 text-center">
-          <h2 className="display-lg mx-auto max-w-2xl text-balance text-ink">Ready when your link is</h2>
+          <Reveal as="h2" className="display-lg mx-auto max-w-2xl text-balance text-ink">Ready when your link is</Reveal>
           <p className="body-lg mx-auto mt-4 max-w-md">No sign-up. No installs. Just paste and convert.</p>
           <Link
             href="#converter"

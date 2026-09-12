@@ -1,4 +1,5 @@
 import { InfoPage, InlineLink } from "@/components/InfoPage";
+import { Reveal } from "@/components/Reveal";
 import { faqJsonLd, pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta(
@@ -100,7 +101,7 @@ export default function FaqPage() {
     >
       {GROUPS.map((g) => (
         <section key={g.heading} aria-label={g.heading} className="faq-row py-8 first:pt-0">
-          <h2 className="text-[22px] font-bold leading-[1.2] tracking-[-0.8px] text-ink">{g.heading}</h2>
+          <Reveal as="h2" className="text-[22px] font-bold leading-[1.2] tracking-[-0.8px] text-ink">{g.heading}</Reveal>
           <div className="mt-4 space-y-5">
             {g.items.map((f) => (
               <div key={f.q}>
