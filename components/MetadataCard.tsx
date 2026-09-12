@@ -32,7 +32,7 @@ export function MetadataCard({ meta, bitrate, onBitrate }: { meta: Meta; bitrate
         )}
         <div className="min-w-0 flex-1">
           <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{meta.source}</p>
-          <h2 className="mt-1 line-clamp-2 text-base font-semibold leading-snug">{meta.title}</h2>
+          <p className="mt-1 line-clamp-2 text-base font-semibold leading-snug">{meta.title}</p>
           <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
             {[meta.author, formatDuration(meta.duration)].filter(Boolean).join(" · ")}
           </p>

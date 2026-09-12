@@ -5,7 +5,6 @@ import { validateUrl } from "@/lib/validation/url";
 import { Button } from "@/components/ui/Button";
 import { Progress } from "@/components/ui/Progress";
 import { MetadataCard, MetadataSkeleton, type Meta } from "@/components/MetadataCard";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 type Phase =
   | { name: "idle" }
@@ -341,28 +340,3 @@ export function Converter() {
   );
 }
 
-export function SiteHeader() {
-  return (
-    <header className="border-b border-neutral-200/70 dark:border-neutral-800/70">
-      <div className="mx-auto flex h-14 w-full max-w-4xl items-center justify-between px-4">
-        <a href="/" className="flex items-center gap-2 font-semibold tracking-tight" aria-label="VideoToMP3 home">
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900" aria-hidden>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-          </span>
-          VideoToMP3
-        </a>
-        <nav className="flex items-center gap-1 text-sm" aria-label="Main">
-          <a href="#how" className="hidden rounded-full px-3 py-1.5 text-neutral-500 transition hover:text-neutral-900 sm:inline dark:text-neutral-400 dark:hover:text-white">
-            How it works
-          </a>
-          <a href="#privacy" className="hidden rounded-full px-3 py-1.5 text-neutral-500 transition hover:text-neutral-900 sm:inline dark:text-neutral-400 dark:hover:text-white">
-            Privacy
-          </a>
-          <ThemeToggle />
-        </nav>
-      </div>
-    </header>
-  );
-}
