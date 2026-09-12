@@ -1,109 +1,136 @@
-import { InfoPage, H2, P, InlineLink } from "@/components/InfoPage";
-import { pageMeta } from "@/lib/seo";
+import { HowToExperience } from "@/components/HowToExperience";
+import { SITE_URL, faqJsonLd, pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta(
   "/how-to-convert-video-to-mp3",
-  "How to Convert a Video to MP3",
-  "Step-by-step guide to converting a video to MP3 with Kharb: copy the link, paste it into the converter, choose a quality, convert, and download."
+  "How to Convert Video to MP3 in 3 Steps",
+  "Watch video become MP3: copy the link, paste it into Kharb, pick a quality, convert, and download. Interactive demo, 8-second timeline, formats, and quick answers."
 );
+
+const HOWTO_STEPS = [
+  {
+    q: "Which links actually work?",
+    a: "Public YouTube watch URLs, youtu.be shortcuts, Shorts, embeds, and music.youtube.com. Private, deleted, sign-in-only, or region-blocked videos fail at analysis before anything downloads.",
+  },
+  {
+    q: "What quality should I pick?",
+    a: "192 kbps suits almost everything. Use 128 kbps for the smallest files and 256–320 kbps when you want to preserve the source as closely as possible.",
+  },
+  {
+    q: "How long does conversion take?",
+    a: "Seconds for short clips, longer for long videos. Progress is reported live from the real encoder, and brief queuing at busy moments is normal.",
+  },
+  {
+    q: "Where do my files go?",
+    a: "Nowhere permanent. Source material is deleted when transcoding finishes and finished MP3s expire after about 30 minutes. Cancelling wipes working files immediately.",
+  },
+  {
+    q: "Can I convert anything I find?",
+    a: "Only content you own or have explicit permission to download, and respect platform terms and copyright law.",
+  },
+];
+
+function howToJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: "How to Convert Video to MP3 with Kharb",
+    description:
+      "Copy a video link you own or have permission to download, paste it into the Kharb converter, choose an audio quality, convert, and download the MP3.",
+    totalTime: "PT5M",
+    tool: [{ "@type": "HowToTool", name: "Kharb video to MP3 converter" }],
+    step: [
+      {
+        "@type": "HowToStep",
+        position: 1,
+        name: "Copy the video URL",
+        text: "Copy a public video link you own or have permission to download. Private, deleted, or sign-in-only videos cannot be analyzed.",
+        url: `${SITE_URL}/how-to-convert-video-to-mp3#ht-theatre`,
+      },
+      {
+        "@type": "HowToStep",
+        position: 2,
+        name: "Paste the URL and analyze",
+        text: "Paste the link into the Kharb converter and select Analyze to validate it and preview title, duration, author, and thumbnail.",
+        url: `${SITE_URL}/how-to-convert-video-to-mp3#ht-demo`,
+      },
+      {
+        "@type": "HowToStep",
+        position: 3,
+        name: "Choose audio quality",
+        text: "Pick 128, 192, 256, or 320 kbps. 192 kbps suits most listening; higher settings preserve more of the source but cannot restore lost detail.",
+        url: `${SITE_URL}/how-to-convert-video-to-mp3#ht-try`,
+      },
+      {
+        "@type": "HowToStep",
+        position: 4,
+        name: "Start the conversion",
+        text: "Queue the job and follow live progress from analyzing through retrieving, transcoding with FFmpeg, and finalizing. Cancel anytime to delete working files.",
+        url: `${SITE_URL}/how-to-convert-video-to-mp3#ht-try`,
+      },
+      {
+        "@type": "HowToStep",
+        position: 5,
+        name: "Download the MP3",
+        text: "Save the MP3 from its temporary link before it expires after about 30 minutes. Expired files cannot be recovered — just convert again.",
+        url: `${SITE_URL}/how-to-convert-video-to-mp3#ht-try`,
+      },
+    ],
+  };
+}
+
+function breadcrumbJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+      { "@type": "ListItem", position: 2, name: "How to Convert Video to MP3", item: `${SITE_URL}/how-to-convert-video-to-mp3` },
+    ],
+  };
+}
 
 export default function HowToPage() {
   return (
-    <InfoPage
-      title="How to Convert a Video to MP3"
-      intro="Five short steps take you from a video link to an MP3 on your device. Only convert content you own or have permission to download."
-    >
-      <section aria-labelledby="step1">
-        <H2 id="step1">Step 1: Copy the Video URL</H2>
-        <P>
-          Open the video in your browser or app and copy its address. On YouTube this is the watch URL, a youtu.be
-          shortcut, or the address of a Short — any of these work because they all point to the same video. Double
-          check that the video is public and playable: private, deleted, or sign-in-only videos cannot be analyzed,
-          and the converter will tell you so rather than guessing.
-        </P>
-      </section>
+    <main className="bg-transparent pb-24">
+      {/* Crawlable step + troubleshooting copy (visually hidden, keeps SEO depth without breaking the cinematic rhythm) */}
+      <div className="sr-only">
+        <h2>Step 1: Copy the video URL</h2>
+        <p>
+          Open the video and copy its address — a watch URL, youtu.be shortcut, or Short. Confirm it is public and
+          playable; private, deleted, or sign-in-only videos cannot be analyzed.
+        </p>
+        <h2>Step 2: Paste the URL into the converter</h2>
+        <p>
+          Paste the link into the Kharb homepage converter and select Analyze. The site validates the address and shows
+          title, duration, author, and thumbnail before anything converts.
+        </p>
+        <h2>Step 3: Choose audio quality</h2>
+        <p>Pick 128, 192, 256, or 320 kbps. 192 kbps suits most listening; higher settings preserve more of the source.</p>
+        <h2>Step 4: Start the conversion</h2>
+        <p>
+          Queue a background job and follow live progress — analyzing, retrieving, transcoding with FFmpeg, finalizing.
+          Cancel anytime to delete working files immediately.
+        </p>
+        <h2>Step 5: Download the MP3</h2>
+        <p>
+          Save the MP3 before its temporary link expires after about 30 minutes. Expired files cannot be recovered.
+        </p>
+        <h2>Troubleshooting</h2>
+        <p>
+          Unsupported source means the host is not supported. Couldn&apos;t fetch information usually means a private,
+          deleted, age-restricted, or region-blocked video. Sign-in required means the video is behind a login. Too
+          large or duration errors mean configured limits were exceeded. Time-outs often clear after waiting a few
+          minutes; repeated rapid retries can extend a cooldown. Rate limits (~20 analyses/minute, ~10 conversions/hour)
+          clear after a short pause.
+        </p>
+      </div>
 
-      <section aria-labelledby="step2">
-        <H2 id="step2">Step 2: Paste the URL into the website&apos;s conversion tool</H2>
-        <P>
-          Go to the Kharb homepage and paste the link into the converter input, then select Analyze. The site
-          validates the address, strips tracking parameters, and shows you the video&apos;s title, duration, author,
-          and thumbnail. If the details don&apos;t match the video you intended, stop here and re-copy the link —
-          converting starts only when you say so.
-        </P>
-        <P>
-          <InlineLink href="/">Convert a video to MP3 with our website</InlineLink> — the converter is at the top of
-          the homepage and works without an account.
-        </P>
-      </section>
+      <HowToExperience />
 
-      <section aria-labelledby="step3">
-        <H2 id="step3">Step 3: Choose Your Audio Quality</H2>
-        <P>
-          After analysis you can pick an MP3 bitrate: 128, 192, 256, or 320 kbps. The default of 192 kbps suits most
-          listening — speech, podcasts, and casual music playback. Choose 128 kbps for the smallest files, or 256–320
-          kbps when you want to preserve as much of the source as possible. Keep in mind that a higher setting cannot
-          add detail the original video&apos;s audio never had.
-        </P>
-      </section>
-
-      <section aria-labelledby="step4">
-        <H2 id="step4">Step 4: Start the Conversion</H2>
-        <P>
-          Select the convert button to queue a background job. Progress is reported live from the actual work being
-          done — analyzing, retrieving the source audio, transcoding with FFmpeg, and finalizing. Longer videos take
-          longer, and only a couple of jobs run at once, so brief queuing at busy moments is normal. You can cancel at
-          any time; cancelling deletes the job&apos;s working files immediately.
-        </P>
-      </section>
-
-      <section aria-labelledby="step5">
-        <H2 id="step5">Step 5: Download the MP3</H2>
-        <P>
-          When the job completes, a temporary download link appears with the file name and size. Save the MP3 before
-          the link expires — finished files are deleted automatically after about 30 minutes under the default
-          configuration, and expired files cannot be recovered. If a link has lapsed, simply run the conversion again.
-        </P>
-      </section>
-
-      <section aria-labelledby="troubleshooting">
-        <H2 id="troubleshooting">Troubleshooting</H2>
-        <div className="mt-2 space-y-3">
-          <P>
-            <strong className="text-ink">“Unsupported source.”</strong> The link is not
-            from a supported host. Standard YouTube addresses work; most other sites do not.
-          </P>
-          <P>
-            <strong className="text-ink">“Couldn&apos;t fetch information.”</strong> The
-            video may be private, deleted, age-restricted, or region-blocked. Confirm it plays in a signed-out browser
-            window and try again.
-          </P>
-          <P>
-            <strong className="text-ink">“Requires sign-in.”</strong> Videos behind a
-            login cannot be converted. Only public content you are allowed to download will work.
-          </P>
-          <P>
-            <strong className="text-ink">“Too large” or duration errors.</strong> The
-            video exceeds the configured duration or size limits. Try a shorter video.
-          </P>
-          <P>
-            <strong className="text-ink">Time-outs and retrieval failures.</strong>{" "}
-            Upstream platforms throttle automated downloads, especially from data-center networks. Waiting a few
-            minutes and retrying — ideally with a shorter video — often succeeds. Repeated rapid retries can extend a
-            cooldown, so pace your attempts.
-          </P>
-          <P>
-            <strong className="text-ink">“Too often, wait a moment.”</strong> You hit a
-            rate limit (roughly 20 analyses per minute or 10 conversions per hour per address). Pause briefly and
-            continue.
-          </P>
-        </div>
-        <P>
-          More answers live in the <InlineLink href="/faq">frequently asked questions</InlineLink>, and the{" "}
-          <InlineLink href="/privacy">privacy policy</InlineLink> explains what happens to submitted links and
-          temporary files.
-        </P>
-      </section>
-    </InfoPage>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd()) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(HOWTO_STEPS)) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd()) }} />
+    </main>
   );
 }
