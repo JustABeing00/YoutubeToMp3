@@ -226,6 +226,329 @@ body {
     background: transparent;
     z-index: 1;
   }
+
+  /* ——— Brilean HOW WE WORK port (How it works) ———
+     Tokens sampled from brilean.com: black #1A1918, flash-blue #0099ff,
+     gray #6B6B6B, line #2E2D2C, muted #A8A8A8. Type substitutes:
+     Ease Semi Display -> Inter 500 tight; TT Hoves Pro -> Inter 400. */
+  .bri-process {
+    background: transparent;
+    color: #fff;
+    position: relative;
+    z-index: 2;
+    margin-top: 96px;
+    padding: 0 20px;
+    scroll-margin-top: 72px;
+  }
+  .bri-track {
+    height: 520vh;
+    position: relative;
+    background: #1a1918;
+    border-radius: 30px;
+    border-top: 0.5px solid rgba(255, 255, 255, 0.1);
+    max-width: 1199px;
+    margin: 0 auto;
+  }
+  .bri-track.is-fallback {
+    height: auto;
+  }
+  .bri-sticky {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    height: 100svh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 96px 0 40px;
+    overflow: hidden;
+    border-radius: 30px;
+  }
+  .bri-track.is-fallback .bri-sticky {
+    position: static;
+    height: auto;
+    display: block;
+    padding: 64px 0;
+  }
+  .bri-global {
+    width: 100%;
+    max-width: 1199px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+  .bri-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 48px;
+    align-items: start;
+    width: 100%;
+  }
+  .bri-labelcol {
+    padding-top: 12px;
+    position: sticky;
+    top: 96px;
+  }
+  .bri-uppertitle {
+    display: inline-flex;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 100px;
+    padding: 8px 16px;
+    margin: 0;
+    white-space: nowrap;
+  }
+  .bri-labelsub {
+    margin-top: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #a8a8a8;
+  }
+  .bri-container {
+    position: relative;
+    padding-left: 64px;
+    min-height: 0;
+  }
+  .bri-timeline {
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 136px;
+    pointer-events: none;
+  }
+  .bri-timeline__line {
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #2e2d2c;
+    border-radius: 2px;
+  }
+  .bri-timeline__fill {
+    position: absolute;
+    left: 12px;
+    top: 0;
+    width: 2px;
+    background: #0099ff;
+    border-radius: 2px;
+    will-change: height;
+  }
+  .bri-timeline__icon {
+    position: absolute;
+    left: 0;
+    transform: translateY(-12px);
+    will-change: top;
+  }
+  .bri-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .bri-tab {
+    color: #6b6b6b;
+    transition: color 0.35s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .bri-tab:last-child {
+    border-bottom: none;
+  }
+  .bri-tab.active {
+    color: #fff;
+  }
+  .bri-tabtitle {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 16px 0;
+    cursor: pointer;
+    color: inherit;
+    text-align: left;
+  }
+  .bri-steptitle {
+    flex: 1 1 auto;
+    font-family: Inter, "Inter Variable", Arial, sans-serif;
+    font-weight: 500;
+    font-size: clamp(30px, 4vw, 46px);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: inherit;
+  }
+  .bri-dot {
+    flex: none;
+    align-self: center;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #3a3a3a;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  .bri-dot[data-active="true"] {
+    background: #0099ff;
+    box-shadow: 0 0 0 4px rgba(0, 153, 255, 0.25);
+  }
+  .bri-stepindex {
+    flex: none;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    opacity: 0.8;
+    min-width: 28px;
+    text-align: right;
+  }
+  .bri-tabinner {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(14px);
+    transition:
+      max-height 0.6s cubic-bezier(0.625, 0.05, 0, 1),
+      opacity 0.45s ease,
+      transform 0.6s cubic-bezier(0.625, 0.05, 0, 1);
+  }
+  .bri-tab.active .bri-tabinner {
+    max-height: 560px;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .bri-track.is-fallback .bri-tabinner {
+    max-height: none;
+    opacity: 1;
+    transform: none;
+  }
+  .bri-stepbody {
+    margin: 0;
+    max-width: 560px;
+    font-size: 18px;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    color: #c9c9c9;
+  }
+  .bri-tab.active .bri-stepbody {
+    color: #e8e8e8;
+  }
+  .bri-visual {
+    margin-top: 16px;
+    margin-bottom: 20px;
+    max-width: 520px;
+    height: 230px;
+  }
+  .bri-visual svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Looping line-art motion (Brilean lottie language, CSS rebuild) */
+  @keyframes bri-settle-a {
+    0%, 100% { transform: translateY(-7px); }
+    50% { transform: translateY(7px); }
+  }
+  @keyframes bri-settle-b {
+    0%, 100% { transform: translateY(6px); }
+    50% { transform: translateY(-6px); }
+  }
+  @keyframes bri-bar {
+    0% { transform: scaleX(0.15); opacity: 0.6; }
+    50% { transform: scaleX(1); opacity: 1; }
+    100% { transform: scaleX(0.15); opacity: 0.6; }
+  }
+  @keyframes bri-wave {
+    0%, 100% { transform: scaleY(0.7); opacity: 0.6; }
+    50% { transform: scaleY(1.15); opacity: 1; }
+  }
+  @keyframes bri-drop {
+    0% { transform: translateY(-9px); opacity: 0.55; }
+    50% { transform: translateY(7px); opacity: 1; }
+    100% { transform: translateY(-9px); opacity: 0.55; }
+  }
+  @keyframes bri-nudge {
+    0%, 100% { transform: translateY(0); opacity: 0.9; }
+    50% { transform: translateY(7px); opacity: 0.4; }
+  }
+  .bri-circle-a {
+    animation: bri-settle-a 5s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .bri-circle-b {
+    animation: bri-settle-b 5s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .bri-bar-a, .bri-bar-b, .bri-bar-c {
+    animation: bri-bar 3.2s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: left center;
+  }
+  .bri-bar-b { animation-delay: 0.35s; }
+  .bri-bar-c { animation-delay: 0.7s; }
+  .bri-pulse {
+    animation: bri-wave 2.4s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .bri-file {
+    animation: bri-drop 4s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .bri-arrow {
+    animation: bri-nudge 1.8s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  @media (max-width: 900px) {
+    .bri-process {
+      padding: 0 12px;
+    }
+    .bri-sticky {
+      padding: 80px 0 28px;
+    }
+    .bri-global {
+      padding: 0 20px;
+    }
+    .bri-grid {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    .bri-labelcol {
+      position: static;
+      padding-top: 0;
+    }
+    .bri-container {
+      padding-left: 40px;
+      min-height: 0;
+    }
+    .bri-timeline {
+      width: 100px;
+    }
+    .bri-timeline__icon svg {
+      width: 100px;
+      height: auto;
+    }
+    .bri-steptitle {
+      font-size: 30px;
+    }
+    .bri-stepbody {
+      font-size: 16px;
+    }
+    .bri-visual {
+      height: 200px;
+    }
+    .bri-track {
+      height: 480vh;
+    }
+  }
 }
 
 @keyframes rise {

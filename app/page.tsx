@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Converter } from "@/components/Converter";
+import { HowWeWork } from "@/components/HowWeWork";
 import { Reveal } from "@/components/Reveal";
 import { faqJsonLd } from "@/lib/seo";
 
@@ -43,24 +44,6 @@ const FAQS = [
   {
     q: "What happens to my files after conversion?",
     a: "You receive a temporary download link. Once it expires, the MP3 and any remaining working files are deleted automatically. Download anything you want to keep before the link expires, because expired files cannot be recovered.",
-  },
-];
-
-const STEPS = [
-  {
-    n: "01",
-    title: "Paste & Analyze",
-    body: "Paste the video URL and select Analyze. The site validates the link, normalizes it to a canonical form, and fetches title, duration, author, and thumbnail so you confirm the right video.",
-  },
-  {
-    n: "02",
-    title: "Convert",
-    body: "Choose your audio quality and start the job. A background worker retrieves the source audio and transcodes it with FFmpeg — queued, retrieving, processing, finalizing — with real encoder progress.",
-  },
-  {
-    n: "03",
-    title: "Download",
-    body: "Get a temporary download link when the job completes. Source files are removed immediately after encoding and finished files expire automatically. Expired? Just run it again.",
   },
 ];
 
@@ -125,23 +108,12 @@ export default function Home() {
           </div>
         </section>
 
-        {/* HOW IT WORKS */}
-        <section aria-labelledby="how" className="mt-24">
-          <p className="eyebrow text-inkmuted">How it works</p>
-          <Reveal as="h2" id="how" className="display-lg mt-4 text-balance text-ink">
-            Paste. Convert. Download.
-          </Reveal>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {STEPS.map((s) => (
-              <div key={s.n} className="card-charcoal p-8">
-                <p className="text-[13px] font-medium tracking-[-0.13px] text-inkmuted">{s.n}</p>
-                <p className="display-md mt-3 text-ink">{s.title}</p>
-                <p className="mt-3 text-[15px] leading-[1.3] tracking-[-0.15px] text-inkmuted">{s.body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+        {/* HOW IT WORKS — Brilean "How we work" 1:1 port (scroll-scrubbed timeline) */}
+      </div>
 
+      <HowWeWork />
+
+      <div className="mx-auto w-full max-w-canvas px-5">
         {/* WHY — charcoal grid */}
         <section aria-labelledby="why" className="mt-24">
           <p className="eyebrow text-inkmuted">Why Kharb</p>
