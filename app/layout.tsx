@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
@@ -23,6 +24,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Google tag (gtag.js) — single site-wide tag, do not duplicate per page. */}
+        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-70T5R1L88F" />
+        <Script id="google-analytics">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-70T5R1L88F');`}
+        </Script>
+      </head>
       <body className="min-h-screen">
         <ThemeProvider>{children}</ThemeProvider>
       </body>

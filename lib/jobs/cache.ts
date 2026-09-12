@@ -32,7 +32,7 @@ export function videoIdOf(sourceUrl: string): string | null {
 function dataDir(): string {
   const raw = process.env.DATABASE_URL ?? "file:./data/jobs.db";
   const p = raw.startsWith("file:") ? raw.slice("file:".length) : "./data/jobs.db";
-  const abs = path.isAbsolute(p) ? p : path.resolve(process.cwd(), p);
+  const abs = path.isAbsolute(p) ? p : path.resolve(/*turbopackIgnore: true*/ process.cwd(), p);
   return path.dirname(abs);
 }
 
