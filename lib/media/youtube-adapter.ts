@@ -12,8 +12,32 @@ import { getConfig } from "@/lib/config";
  * argument ARRAY — user input is always a single argv element, never
  * interpolated into a shell string (command-injection safe).
  *
+ * VPS note: YouTube serves metadata from one endpoint but the actual media
+ * bytes from googlevideo.com, which 403-blocks many datacenter IPs when the
+ * default web/visionos player client is used. Forcing the android client +
+ * IPv4 bypasses most of those blocks without cookies. Deno/Node give yt-dlp
+ * the JS runtime it needs for signature challenges.
+ *
  * Only use with content you own or have permission to download.
  */
+
+// Shared flags for every yt-dlp call. Kept as argv elements (never a shell
+// string) so URLs can't inject commands.
+const YT_BASE_ARGS = [
+  "--force-ipv4",
+  "--no-playlist",
+  "--no-warnings",
+  "--extractor-args",
+  "youtube:player_client=android",
+  "--js-runtimes",
+  "node,deno",
+  "--retries",
+  "3",
+  "--fragment-retries",
+  "3",
+  "--retry-sleep",
+  "1",
+];
 
 function run(cmd: string, args: string[], timeoutMs: number): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
@@ -82,7 +106,7 @@ export class YoutubeAdapter implements MediaSourceAdapter {
     const { YTDLP_PATH } = getConfig();
     const { stdout } = await run(
       YTDLP_PATH,
-      ["--no-playlist", "--skip-download", "--dump-single-json", "--no-warnings", "--", url],
+      [...YT_BASE_ARGS, "--skip-download", "--dump-single-json", "--", url],
       45_000
     );
     let data: YtDlpJson;
@@ -121,8 +145,7 @@ export class YoutubeAdapter implements MediaSourceAdapter {
       const child = spawn(
         YTDLP_PATH,
         [
-          "--no-playlist",
-          "--no-warnings",
+          ...YT_BASE_ARGS,
           "-f",
           "bestaudio/best",
           "--no-part",
