@@ -513,7 +513,7 @@ const STORY = [
   {
     n: "02",
     title: "Start conversion",
-    body: "Pick 128–320 kbps (192 kbps is the sweet spot), then hit Convert. The job queues, retrieves source audio, and transcodes with FFmpeg — progress is real, not theatre.",
+    body: "Pick Original for an instant copy, or MP3 at 128–320 kbps (192 kbps is the sweet spot), then hit Convert. The job queues, retrieves source audio, and prepares it with FFmpeg — progress is real, not theatre.",
     tag: "Queue · retrieve · transcode",
   },
   {
@@ -878,7 +878,7 @@ const MINI_FAQS = [
   },
   {
     q: "What quality should I pick?",
-    a: "192 kbps suits almost everything. Use 128 kbps for the smallest files (speech, drafts) and 256–320 kbps when you want to preserve the source as closely as possible. Higher numbers never restore lost detail.",
+    a: "Original is always the fastest route since it copies the source audio untouched. For MP3, 192 kbps suits almost everything. Use 128 kbps for the smallest files (speech, drafts) and 256–320 kbps when you want to preserve the source as closely as possible. Higher numbers never restore lost detail.",
   },
   {
     q: "How long does conversion take?",

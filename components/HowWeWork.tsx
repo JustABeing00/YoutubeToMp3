@@ -40,7 +40,7 @@ const STEPS = [
   {
     index: "02",
     title: "Convert",
-    body: "Choose 128–320 kbps and start the job. A background worker retrieves the source audio and transcodes it with FFmpeg — queued, retrieving, processing, finalizing — with real encoder progress.",
+    body: "Pick Original for an instant copy or MP3 at 128–320 kbps, then start the job. A background worker retrieves the source audio and prepares it with FFmpeg — queued, retrieving, processing, finalizing — with real encoder progress.",
     visual: "convert" as const,
   },
   {

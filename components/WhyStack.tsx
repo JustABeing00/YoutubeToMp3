@@ -40,7 +40,7 @@ const CARDS = [
   },
   {
     title: "Your quality call",
-    body: "Compact 128 kbps files up to 320 kbps for careful listening. 192 kbps by default.",
+    body: "Original audio, instantly — or MP3 from compact 128 kbps up to 320 kbps for careful listening.",
     icon: "sliders" as const,
   },
   {

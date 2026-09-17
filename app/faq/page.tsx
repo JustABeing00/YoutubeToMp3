@@ -52,7 +52,7 @@ const GROUPS = [
     items: [
       {
         q: "Which quality settings are available?",
-        a: "Four MP3 bitrates: 128, 192, 256, and 320 kbps, with 192 kbps pre-selected. Lower settings mean smaller downloads that are fine for speech; higher settings preserve more of the source at the cost of larger files.",
+        a: "Two outputs: Original copies the source audio as-is (instant, smallest download), and MP3 re-encodes at four bitrates — 128, 192, 256, and 320 kbps, with 192 kbps pre-selected. Lower settings mean smaller downloads that are fine for speech; higher settings preserve more of the source at the cost of larger files.",
       },
       {
         q: "Will 320 kbps always sound better?",

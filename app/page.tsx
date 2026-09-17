@@ -9,11 +9,11 @@ import { faqJsonLd } from "@/lib/seo";
 const FAQS = [
   {
     q: "What is a video-to-MP3 converter?",
-    a: "It is a tool that extracts the audio track from a video and encodes it as an MP3 file, so you can listen to the sound without keeping the picture. Kharb does this in the browser workflow: you submit a link, the server retrieves the audio and transcodes it with FFmpeg, and you download the resulting MP3.",
+    a: "It is a tool that extracts the audio track from a video so you can listen to the sound without keeping the picture. Kharb does this in the browser workflow: you submit a link, pick Original for an instant copy of the source audio or MP3 at the bitrate you choose, the server prepares it with FFmpeg, and you download the resulting file.",
   },
   {
     q: "How do I convert a video to MP3?",
-    a: "Paste a supported video link into the converter above, select Analyze, pick an audio quality, then start the conversion and download the MP3 from the temporary link. For the full walkthrough with troubleshooting, see how to convert a video to MP3 with our website.",
+    a: "Paste a supported video link into the converter above, select Analyze, pick a format, then start the conversion and download the audio from the temporary link. For the full walkthrough with troubleshooting, see how to convert a video to MP3 with our website.",
   },
   {
     q: "Do I need an account?",
@@ -29,7 +29,7 @@ const FAQS = [
   },
   {
     q: "What audio quality can I choose?",
-    a: "You can choose 128, 192, 256, or 320 kbps, with 192 kbps selected by default. A higher number produces a larger file but cannot restore detail that was already lost in the source video's own audio.",
+    a: "Original copies the source audio as-is — instant and smallest. MP3 re-encodes at 128, 192, 256, or 320 kbps, with 192 kbps selected by default. A higher number produces a larger file but cannot restore detail that was already lost in the source video's own audio.",
   },
   {
     q: "Why might a video URL fail?",
@@ -77,7 +77,7 @@ export default function Home() {
           Convert Video to MP3 Online
         </Reveal>
         <p className="body-lg mx-auto mt-6 max-w-xl text-pretty">
-          Paste a link to content you own or have permission to download, choose a quality, and get an MP3. Nothing is
+          Paste a link to content you own or have permission to download, choose a format, and get your audio. Nothing is
           kept — files delete themselves.
         </p>
       </section>
@@ -108,9 +108,10 @@ export default function Home() {
               </p>
             </div>
             <div className="card-charcoal p-8">
-              <p className="display-md text-ink">Standard MP3 out</p>
+              <p className="display-md text-ink">Two outputs, your call</p>
               <p className="mt-3 text-[15px] leading-[1.3] tracking-[-0.15px] text-inkmuted">
-                Output at 128, 192, 256, or 320 kbps — ready for any phone, computer, or car stereo. Archive your own
+                Original grabs the source audio as-is — instant, ideal for most listening. MP3 re-encodes at 128,
+                192, 256, or 320 kbps — ready for any phone, computer, or car stereo. Archive your own
                 recordings, save lectures you are allowed to keep, or carry Creative Commons material offline. Only
                 submit content you own or have permission to download.
               </p>
