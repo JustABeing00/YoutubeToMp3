@@ -15,6 +15,21 @@ export YTDLP_PROXY="${YTDLP_PROXY:-}"
 
 if [ "${WARP_ENABLED:-true}" = "true" ]; then
   mkdir -p "$WARP_DIR"
+  # Ephemeral-disk escape hatch (Render Free has no persistent volume):
+  # materialize a baked profile from env instead of registering. The profile
+  # travels as WGCF_PROFILE_B64 (base64 of wgcf-profile.conf) — never logged,
+  # never committed. Decoding ignores whitespace/newlines, so a wrapped
+  # copy-paste still works.
+  if [ ! -f "$WARP_DIR/wgcf-profile.conf" ] && [ -n "${WGCF_PROFILE_B64:-}" ]; then
+    echo "[warp] materializing profile from WGCF_PROFILE_B64..."
+    if printf '%s' "$WGCF_PROFILE_B64" | base64 -d >"$WARP_DIR/wgcf-profile.conf" 2>/dev/null \
+      && grep -q "PrivateKey" "$WARP_DIR/wgcf-profile.conf" 2>/dev/null; then
+      echo "[warp] profile materialized"
+    else
+      echo "[warp] WGCF_PROFILE_B64 decode failed, continuing without proxy"
+      rm -f "$WARP_DIR/wgcf-profile.conf"
+    fi
+  fi
   if [ ! -f "$WARP_DIR/wgcf-profile.conf" ]; then
     echo "[warp] registering free WARP account..."
     if (cd "$WARP_DIR" && wgcf register --accept-tos >/tmp/wgcf-register.log 2>&1 && wgcf generate >/tmp/wgcf-generate.log 2>&1); then

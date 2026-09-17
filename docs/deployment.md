@@ -88,6 +88,23 @@ Render Starter $7/mo for the origin only (0.5 CPU, no sleep, +disk at
 `/data`): set `DATABASE_URL=file:/data/jobs.db`, `CACHE_MAX_MB=2000`,
 `WARP_ENABLED=true` with baked `wgcf-profile.conf`. Edge + Pages untouched.
 
+## If YouTube flags Render's IP (SOURCE_UNAVAILABLE on every video)
+
+Symptom: even the Big Buck Bunny control video
+(`https://www.youtube.com/watch?v=aqz-KE-bpKQ`) fails analyze with
+`SOURCE_UNAVAILABLE`, while the same link works from a home network. The
+whole egress IP is flagged — same family as the VPS saga. Fix without a
+volume (code already supports it, `scripts/warp-entrypoint.sh`):
+
+1. On your laptop: `[Convert]::ToBase64String([IO.File]::ReadAllBytes("D:\kharb-secrets\wgcf-profile.conf"))` → single-line string.
+2. Render → Environment: add `WGCF_PROFILE_B64=<that line>`, flip
+   `WARP_ENABLED` to `true` → Save (auto-redeploys).
+3. Logs must show `[warp] profile materialized` then `[warp] proxy OK`.
+   If instead `[warp] probe failed`, WARP's exit IP is flagged too — fall
+   back to `FALLBACK_ENABLED` resolvers, and as last resort
+   `ENABLED_ADAPTERS=direct` (direct-file conversions only) until a better
+   egress exists.
+
 ## Old options (kept for reference)
 
 - Fly.io: card required, no free for new users (2026).

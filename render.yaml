@@ -30,7 +30,10 @@ services:
         value: 0
       - key: DEFAULT_BITRATE
         value: 128
-      # Start direct; enable WARP only if YouTube 403s return.
+      # Start direct; enable WARP only if YouTube 403s/SOURCE_UNAVAILABLE return.
+      # To enable: base64 your wgcf-profile.conf locally, set WGCF_PROFILE_B64
+      # to that single line (entrypoint decodes it at boot, never logged),
+      # then flip WARP_ENABLED to true. See .env.example WARP section.
       - key: WARP_ENABLED
         value: false
       - key: FALLBACK_ENABLED
