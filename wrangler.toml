@@ -19,13 +19,11 @@ RENDER_ORIGIN = "https://itachi-cawx.onrender.com"
 # workers_dev = false + preview_urls = false for custom-domains-only.
 
 # Custom-domain routes (Worker-only setup — Pages NOT used).
-# ACTIVATED after kharb.online is added to Cloudflare: uncomment, deploy.
-# Until then they stay commented — wrangler aborts the whole deploy if a
-# zone doesn't exist yet (code 10083).
-# [[routes]]
-# pattern = "kharb.online/*"
-# zone_name = "kharb.online"
+# Domain is Active on Cloudflare → routes live.
+[[routes]]
+pattern = "kharb.online/*"
+zone_name = "kharb.online"
 
-# [[routes]]
-# pattern = "www.kharb.online/*"
-# zone_name = "kharb.online"
+[[routes]]
+pattern = "www.kharb.online/*"
+zone_name = "kharb.online"
