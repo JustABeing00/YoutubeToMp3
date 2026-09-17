@@ -51,9 +51,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   return new Response(stream, {
     headers: {
       "content-type": "text/event-stream",
-      "cache-control": "no-cache, no-transform",
+      // no-store (not just no-cache) so Render + Cloudflare edge never buffer it.
+      "cache-control": "no-store, no-transform",
       connection: "keep-alive",
       "x-accel-buffering": "no",
+      "x-content-type-options": "nosniff",
     },
   });
 }

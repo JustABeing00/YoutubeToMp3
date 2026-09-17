@@ -8,7 +8,21 @@ export interface Meta {
   author: string | null;
 }
 
-export function MetadataCard({ meta, bitrate, onBitrate }: { meta: Meta; bitrate: number; onBitrate: (b: number) => void }) {
+export function MetadataCard({
+  meta,
+  bitrate,
+  onBitrate,
+  format,
+  onFormat,
+}: {
+  meta: Meta;
+  bitrate: number;
+  onBitrate: (b: number) => void;
+  format?: string;
+  onFormat?: (f: "mp3" | "m4a" | "opus") => void;
+}) {
+  const fmt = format ?? "mp3";
+  const setFmt = onFormat ?? (() => {});
   return (
     <div className="card-charcoal animate-rise overflow-hidden">
       <div className="flex flex-col gap-4 p-4 sm:flex-row sm:p-5">
@@ -37,6 +51,35 @@ export function MetadataCard({ meta, bitrate, onBitrate }: { meta: Meta; bitrate
             {[meta.author, formatDuration(meta.duration)].filter(Boolean).join(" · ")}
           </p>
           <div className="mt-4">
+            <label className="text-xs font-medium tracking-[-0.12px] text-ink">Format</label>
+            <div className="mt-1.5 flex flex-wrap gap-2" role="group" aria-label="Audio format">
+              {(
+                [
+                  { v: "m4a", label: "Original", sub: "instant" },
+                  { v: "mp3", label: "MP3", sub: "universal" },
+                  { v: "opus", label: "Opus", sub: "small" },
+                ] as const
+              ).map((f) => (
+                <button
+                  key={f.v}
+                  type="button"
+                  onClick={() => setFmt(f.v)}
+                  aria-pressed={fmt === f.v}
+                  className={`rounded-full px-[14px] py-2 text-sm font-medium tabular-nums tracking-[-0.14px] transition active:scale-95 min-h-[40px] ${
+                    fmt === f.v ? "bg-surface2 text-ink" : "bg-canvas text-inkmuted hover:text-ink"
+                  }`}
+                >
+                  {f.label}
+                  <span className="ml-1 text-xs opacity-60">{f.sub}</span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-xs tracking-[-0.12px] text-inkmuted">
+              Original is a stream copy — instant, near-zero server load. MP3 re-encodes (slower on the free tier).
+            </p>
+          </div>
+          {fmt === "mp3" && (
+          <div className="mt-4">
             <label htmlFor="bitrate" className="text-xs font-medium tracking-[-0.12px] text-ink">
               MP3 quality
             </label>
@@ -61,6 +104,7 @@ export function MetadataCard({ meta, bitrate, onBitrate }: { meta: Meta; bitrate
               192 kbps default. Higher numbers don&apos;t restore quality lost in the source.
             </p>
           </div>
+          )}
         </div>
       </div>
     </div>

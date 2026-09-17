@@ -1,5 +1,5 @@
 /**
- * Turn arbitrary video titles into safe `*.mp3` filenames.
+ * Turn arbitrary video titles into safe audio filenames.
  * Handles spaces, unicode, very long titles, control chars, Windows-reserved names.
  */
 const MAX_BASE = 120;
@@ -28,7 +28,8 @@ const WINDOWS_RESERVED = new Set([
   "lpt9",
 ]);
 
-export function sanitizeFilename(title: string, fallback = "audio"): string {
+export function sanitizeFilename(title: string, fallback = "audio", ext = "mp3"): string {
+  const safeExt = ext === "m4a" || ext === "opus" ? ext : "mp3";
   let base = (title ?? "").normalize("NFC");
   // Remove control chars + illegal FS chars, but KEEP unicode letters/spaces.
   base = base.replace(/[\u0000-\u001F\u007F]/g, "");
@@ -41,5 +42,5 @@ export function sanitizeFilename(title: string, fallback = "audio"): string {
   const points = Array.from(base);
   if (points.length > MAX_BASE) base = points.slice(0, MAX_BASE).join("").trim();
   if (!base) base = fallback;
-  return `${base}.mp3`;
+  return `${base}.${safeExt}`;
 }

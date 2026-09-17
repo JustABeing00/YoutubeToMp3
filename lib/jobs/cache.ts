@@ -4,18 +4,23 @@ import { extractYoutubeId } from "@/lib/validation/url";
 import { getConfig } from "@/lib/config";
 
 /**
- * Persistent conversion cache: completed MP3s keyed by videoId + bitrate.
- * Repeat conversions are served from disk without touching YouTube at all —
- * faster for users (seconds, not minutes) and far fewer upstream requests,
- * which is exactly how the big converter sites keep load (and blocks) down.
+ * Persistent conversion cache: completed audio keyed by videoId + format +
+ * bitrate. Repeat conversions are served from disk without touching YouTube
+ * at all — faster for users (seconds, not minutes) and far fewer upstream
+ * requests, which is exactly how the big converter sites keep load (and
+ * blocks) down.
  *
  * Lives under <dbdir>/cache (on the /data volume in Docker). Bounded by
  * CACHE_MAX_MB + CACHE_TTL_HOURS; enforced on every write and in cleanup.
+ * CACHE_MAX_MB=0 disables the cache (right for ephemeral free-tier disks).
  */
 
-/** Cache key for a YouTube video + bitrate. Null when inputs are invalid. */
-export function cacheKey(videoId: string, bitrate: number): string | null {
+const CACHE_KEY_RE = /^[A-Za-z0-9_-]{11}-(?:\d{1,4}k\.mp3|m4a|opus)$/;
+
+/** Cache key for a YouTube video + format + bitrate. Null when invalid. */
+export function cacheKey(videoId: string, bitrate: number, format: string = "mp3"): string | null {
   if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) return null;
+  if (format === "m4a" || format === "opus") return `${videoId}-${format}`;
   if (!Number.isInteger(bitrate) || bitrate <= 0 || bitrate > 2000) return null;
   return `${videoId}-${bitrate}k.mp3`;
 }
@@ -41,7 +46,7 @@ export function cacheDir(): string {
 }
 
 export function cachePath(key: string): string {
-  if (!/^[A-Za-z0-9_-]{11}-\d{1,4}k\.mp3$/.test(key)) throw new Error("unsafe cache key");
+  if (!CACHE_KEY_RE.test(key)) throw new Error("unsafe cache key");
   return path.join(cacheDir(), key);
 }
 
@@ -59,9 +64,10 @@ export async function readCache(key: string): Promise<string | null> {
   }
 }
 
-/** Store a finished MP3 in cache (best-effort), then enforce bounds. */
+/** Store finished audio in cache (best-effort), then enforce bounds. */
 export async function writeCache(key: string, srcPath: string): Promise<void> {
   const cfg = getConfig();
+  if (cfg.CACHE_MAX_MB <= 0) return; // cache disabled (ephemeral free-tier disk)
   const dest = cachePath(key);
   await fs.mkdir(cacheDir(), { recursive: true });
   await fs.copyFile(srcPath, dest);
@@ -80,7 +86,7 @@ export async function sweepCache(maxBytes: number, ttlMs: number, now = Date.now
   type Item = { name: string; mtimeMs: number; size: number };
   const items: Item[] = [];
   for (const name of entries) {
-    if (!/^[A-Za-z0-9_-]{11}-\d{1,4}k\.mp3$/.test(name)) continue;
+    if (!CACHE_KEY_RE.test(name)) continue;
     try {
       const st = await fs.stat(path.join(cacheDir(), name));
       if (!st.isFile()) continue;

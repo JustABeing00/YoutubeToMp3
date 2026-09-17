@@ -1,0 +1,18 @@
+# kharb.edge — Cloudflare Worker in front of Render Free backend.
+# Free plan, no card: 100k req/day. Deploy: npx wrangler deploy
+name = "kharb-edge"
+main = "worker/index.ts"
+compatibility_date = "2026-09-01"
+
+# Production origin (Render Free Docker, Singapore). Override per env:
+#   npx wrangler deploy --var RENDER_ORIGIN:https://xxxx.onrender.com
+[vars]
+RENDER_ORIGIN = "https://kharb-api.onrender.com"
+
+# Secrets (never commit): npx wrangler secret put ORIGIN_TOKEN
+# Must match the backend ORIGIN_TOKEN env on Render (see middleware.ts).
+
+# Route same-origin API through the Worker; Pages serves the rest:
+# [[routes]]
+# pattern = "kharb.online/api/*"
+# zone_name = "kharb.online"

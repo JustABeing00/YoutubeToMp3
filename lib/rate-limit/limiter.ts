@@ -30,9 +30,15 @@ export function _resetRateLimits() {
 }
 
 export function clientIp(headers: Headers): string {
-  // Trust Cloudflare / proxy headers only for rate-limit bucketing (never for auth).
+  // Trust Cloudflare / edge headers only for rate-limit bucketing (never for auth).
+  // The Worker proxy forwards cf-connecting-ip (or x-origin-ip) so the backend
+  // sees the real visitor even though all TCP connections come from Cloudflare.
   const cf = headers.get("cf-connecting-ip");
   if (cf) return cf.trim().slice(0, 64);
+  const tc = headers.get("true-client-ip");
+  if (tc) return tc.trim().slice(0, 64);
+  const origin = headers.get("x-origin-ip");
+  if (origin) return origin.trim().slice(0, 64);
   const xff = headers.get("x-forwarded-for");
   if (xff) return xff.split(",")[0].trim().slice(0, 64);
   return "unknown";

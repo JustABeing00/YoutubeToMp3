@@ -1,14 +1,14 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { nanoid } from "@/lib/jobs/nanoid";
-import { getConfig } from "@/lib/config";
+import { extForFormat, getConfig } from "@/lib/config";
 import { canTransition, stageText, type InputMetadata, type Job } from "@/lib/jobs/types";
 import { jobStore } from "@/lib/jobs/store";
 import { ensureJobDirs, outputFile, outputDir, sourceDir, removeJobDir, removeSourceFiles } from "@/lib/storage/files";
 import { pickAdapter, AdapterError } from "@/lib/media/youtube-adapter";
 import { cacheKey, readCache, videoIdOf, writeCache } from "@/lib/jobs/cache";
 import { breakerAllows, breakerReport } from "@/lib/jobs/breaker";
-import { transcodeToMp3, verifyMp3 } from "@/lib/ffmpeg/transcode";
+import { remuxAudio, transcodeToMp3, verifyAudio } from "@/lib/ffmpeg/transcode";
 import { sanitizeFilename } from "@/lib/validation/filename";
 import { logEvent, logError } from "@/lib/logging/logger";
 
@@ -55,11 +55,13 @@ export async function enqueue(opts: {
   sourceUrl: string;
   source: string;
   bitrate: number;
+  format?: Job["format"];
   ip: string;
   input?: InputMetadata;
 }): Promise<Job> {
   const cfg = getConfig();
   const now = Date.now();
+  const format = opts.format === "m4a" || opts.format === "opus" ? opts.format : "mp3";
   const job: Job = {
     id: nanoid(16),
     status: "queued",
@@ -68,13 +70,14 @@ export async function enqueue(opts: {
     sourceUrl: opts.sourceUrl,
     source: opts.source,
     bitrate: opts.bitrate,
+    format,
     createdAt: now,
     updatedAt: now,
     expiresAt: now + cfg.JOB_EXPIRATION_MINUTES * 60_000,
     input: opts.input,
   };
   await jobStore.create({ ...job, ip: opts.ip } as Job & { ip: string });
-  logEvent("job.created", { jobId: job.id, source: job.source, bitrate: job.bitrate });
+  logEvent("job.created", { jobId: job.id, source: job.source, bitrate: job.bitrate, format: job.format });
   void pump();
   return job;
 }
@@ -159,16 +162,17 @@ async function runJob(id: string) {
     // the job falls through to the normal pipeline (still analyzing→…).
     if (job.source === "youtube") {
       const vid = videoIdOf(job.sourceUrl);
-      const key = vid && cacheKey(vid, job.bitrate);
+      const format = job.format ?? "mp3";
+      const key = vid && cacheKey(vid, job.bitrate, format);
       const hit = key ? await readCache(key) : null;
       if (hit && key) {
         try {
           const title = (await jobStore.get(id))?.input?.title ?? "audio";
-          const filename = sanitizeFilename(title);
+          const filename = sanitizeFilename(title, "audio", extForFormat(format));
           const outPath = outputFile(id, filename);
           await fs.mkdir(outputDir(id), { recursive: true });
           await fs.copyFile(hit, outPath);
-          const verified = await verifyMp3(outPath);
+          const verified = await verifyAudio(outPath);
           // Walk the legal transition chain (analyzing→retrieving→processing→
           // finalizing→completed) so status subscribers see a truthful sprint.
           await setJob(id, { status: "retrieving", progress: 40 });
@@ -177,10 +181,10 @@ async function runJob(id: string) {
           await setJob(id, {
             status: "completed",
             progress: 100,
-            output: { filename, bytes: verified.bytes, duration: verified.duration, bitrate: job.bitrate },
+            output: { filename, bytes: verified.bytes, duration: verified.duration, bitrate: job.bitrate, format },
           });
           breakerReport(true);
-          logEvent("job.completed", { jobId: id, cached: true, bytes: verified.bytes });
+          logEvent("job.completed", { jobId: id, cached: true, bytes: verified.bytes, format });
           return;
         } catch {
           await fs.rm(hit, { force: true }).catch(() => {});
@@ -208,25 +212,33 @@ async function runJob(id: string) {
     }
     logEvent("media.retrieved", { jobId: id });
 
-    // PROCESSING — real ffmpeg percentage 35% -> 90%.
+    // PROCESSING — mp3: real ffmpeg percentage 35% -> 90%.
+    // m4a/opus: stream copy is near-instant, walk straight through.
     await setJob(id, { status: "processing", progress: 38 });
     const title = (await jobStore.get(id))?.input?.title ?? "audio";
-    const filename = sanitizeFilename(title);
+    const format = job.format ?? "mp3";
+    const filename = sanitizeFilename(title, "audio", extForFormat(format));
     const outPath = outputFile(id, filename);
     await fs.mkdir(outputDir(id), { recursive: true });
     try {
       const inputMeta = (await jobStore.get(id))?.input;
-      await transcodeToMp3({
-        inputPath: downloadedPath,
-        outputPath: outPath,
-        bitrate: job.bitrate,
-        timeoutMs,
-        expectedDurationSec: inputMeta?.duration ?? null,
-        abortSignal: signal,
-        onProgress: ({ percent }) => {
-          void setJob(id, { progress: Math.round(38 + (percent / 100) * 52) });
-        },
-      });
+      if (format === "mp3") {
+        await transcodeToMp3({
+          inputPath: downloadedPath,
+          outputPath: outPath,
+          bitrate: job.bitrate,
+          timeoutMs,
+          expectedDurationSec: inputMeta?.duration ?? null,
+          abortSignal: signal,
+          onProgress: ({ percent }) => {
+            void setJob(id, { progress: Math.round(38 + (percent / 100) * 52) });
+          },
+        });
+      } else {
+        await setJob(id, { progress: 55 });
+        await remuxAudio({ inputPath: downloadedPath, outputPath: outPath, timeoutMs, abortSignal: signal });
+        await setJob(id, { progress: 88 });
+      }
     } catch (e) {
       if (signal.aborted || (e as Error & { code?: string })?.code === "CANCELLED") return;
       throw e;
@@ -241,21 +253,22 @@ async function runJob(id: string) {
       await removeJobDir(id);
       throw new AdapterError("OUTPUT_TOO_LARGE", "output exceeds size limit");
     }
-    const verified = await verifyMp3(outPath);
+    const verified = await verifyAudio(outPath);
     const totalMs = Date.now() - started;
     // Persist successful YouTube conversions for instant repeat serving.
+    // Skipped automatically when CACHE_MAX_MB=0 (ephemeral free-tier disk).
     if (job.source === "youtube") {
       const vid = videoIdOf(job.sourceUrl);
-      const key = vid && cacheKey(vid, job.bitrate);
+      const key = vid && cacheKey(vid, job.bitrate, job.format ?? "mp3");
       if (key) await writeCache(key, outPath).catch(() => {});
     }
     await setJob(id, {
       status: "completed",
       progress: 100,
-      output: { filename, bytes: verified.bytes, duration: verified.duration, bitrate: job.bitrate },
+      output: { filename, bytes: verified.bytes, duration: verified.duration, bitrate: job.bitrate, format: job.format ?? "mp3" },
     });
     breakerReport(true);
-    logEvent("job.completed", { jobId: id, durationMs: totalMs, bytes: verified.bytes });
+    logEvent("job.completed", { jobId: id, durationMs: totalMs, bytes: verified.bytes, format: job.format ?? "mp3" });
   } catch (e) {
     const cur = await jobStore.get(id);
     if (!cur || ["cancelled", "completed"].includes(cur.status)) return;
@@ -281,6 +294,7 @@ export function publicJob(job: Job) {
     progress: job.progress,
     stage: job.stage,
     bitrate: job.bitrate,
+    format: job.format ?? "mp3",
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
     expiresAt: job.expiresAt,

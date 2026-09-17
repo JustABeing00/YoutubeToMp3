@@ -22,6 +22,8 @@ export interface OutputMetadata {
   bytes: number;
   duration: number | null;
   bitrate: number;
+  /** mp3 = re-encoded; m4a/opus = stream copy. Defaults to mp3 for old rows. */
+  format: "mp3" | "m4a" | "opus";
 }
 
 export interface Job {
@@ -32,6 +34,8 @@ export interface Job {
   sourceUrl: string; // normalized URL (query stripped by logger)
   source: string; // youtube | direct
   bitrate: number;
+  /** Output container. Optional for backward compat (old rows = mp3). */
+  format?: "mp3" | "m4a" | "opus";
   createdAt: number;
   updatedAt: number;
   expiresAt: number;
@@ -80,7 +84,7 @@ export function stageText(status: JobStatus): string {
     case "processing":
       return "Processing audio…";
     case "finalizing":
-      return "Finalizing MP3…";
+      return "Finalizing audio…";
     case "completed":
       return "Complete";
     case "failed":

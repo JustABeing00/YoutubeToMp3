@@ -14,6 +14,7 @@ export const ERROR_CODES = {
   EXPIRED: "EXPIRED",
   CONFLICT: "CONFLICT",
   SERVER_ERROR: "SERVER_ERROR",
+  WAKING: "WAKING",
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
@@ -33,6 +34,7 @@ const MESSAGES: Record<ErrorCode, string> = {
   EXPIRED: "This file has expired and was deleted. Please convert again.",
   CONFLICT: "This job can't be modified in its current state.",
   SERVER_ERROR: "Something went wrong on our side. Please try again.",
+  WAKING: "Converter is waking up after idle. Please wait a moment and retry.",
 };
 
 export function errorBody(code: ErrorCode, detail?: string) {

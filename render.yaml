@@ -1,0 +1,40 @@
+# Render blueprint — one-click backend for Workers + Render split.
+# Dashboard alternative: New Web Service -> Docker -> same values.
+# Free plan ($0, no card): 0.1 CPU / 512MB / ephemeral / sleeps after 15 min.
+services:
+  - type: web
+    name: kharb-api
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/metrics
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://kharb.online
+      # Ephemeral free-tier paths (disk is wiped on every restart — by design).
+      - key: DATABASE_URL
+        value: file:/tmp/data/jobs.db
+      - key: TEMP_DIR
+        value: /tmp/converter
+      # Fit the 0.1 CPU box: 1 slot, instant-first formats, short inputs.
+      - key: MAX_CONCURRENT_JOBS
+        value: 1
+      - key: MAX_INPUT_DURATION_SEC
+        value: 1200
+      - key: CACHE_MAX_MB
+        value: 0
+      - key: DEFAULT_BITRATE
+        value: 128
+      # Start direct; enable WARP only if YouTube 403s return.
+      - key: WARP_ENABLED
+        value: false
+      - key: FALLBACK_ENABLED
+        value: true
+      # Must match Worker ORIGIN_TOKEN secret (see wrangler.toml + middleware.ts).
+      - key: ORIGIN_TOKEN
+        sync: false

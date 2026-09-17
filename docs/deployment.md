@@ -1,32 +1,91 @@
-# Deployment
+# Deployment — Workers + Render (free, no card)
 
-## ⚠️ Cloudflare Workers cannot host this app
+## Architecture (locked)
+
+```
+Browser → https://kharb.online/*
+  ├─ /*      → Cloudflare Pages (static frontend, 7 SEO pages + Converter UI)
+  └─ /api/*  → Worker kharb-edge (worker/index.ts, wrangler.toml)
+                 → https://xxxx.onrender.com/api/* (Render Free Docker)
+```
+
+Same-origin proxy = Converter keeps relative `/api/*` URLs, zero CORS work.
+Workers free: 100k req/day, no card. Render free: 0.1 CPU / 512MB /
+ephemeral / sleeps after 15 min. Conversions stay on Render; the edge only
+proxies + short-caches analyze + retries cold starts.
+
+## ⚠️ Cloudflare Workers cannot host conversions
 
 Workers are V8 isolates: **no `child_process` (ffmpeg/yt-dlp impossible), no
-writable filesystem (SQLite + temp MP3s impossible), ~30s CPU limits** (a
+writable filesystem (SQLite + temp audio impossible), CPU limits** (a
 3-minute transcode dies). The API routes explicitly use the Node.js runtime
-for this reason.
+for this reason. The Worker here is a thin proxy, not a converter.
 
-## What to use instead (cheapest → best)
+## Backend — Render Free Docker
 
-1. **Fly.io** (recommended free-ish) — `fly launch` with the included
-   `Dockerfile`; 256 MB VM + 1 GB volume (`/data`) is enough to learn.
-   `fly volumes create jobdata --size 1`, set secrets from `.env.example`.
-2. **Render free tier** — Docker deploy, persistent disk for `/data`. Sleeps
-   when idle (first conversion wakes it).
-3. **Railway / Koyeb / Hetzner CX11 (~€4/mo)** — same container, no changes.
-4. **Split (optional):** frontend on Cloudflare Pages + this container as the
-   API (`NEXT_PUBLIC_SITE_URL` points at Pages, API behind same domain via
-   reverse proxy to avoid CORS). Only worth it past hobby scale.
+Option 1 — blueprint (recommended): `render.yaml` in repo root. Dashboard →
+New → Blueprint → select repo → set `ORIGIN_TOKEN` (generate once, also used
+as Worker secret) → Deploy. Region: Singapore.
 
-All options run `docker-compose.yml` as-is. Volumes **must** persist `/data`
-(SQLite) and ideally `/tmp/converter` (or let it be ephemeral — cleanup
-recovers orphans on boot).
+Option 2 — manual: New Web Service → Docker → repo → region Singapore →
+health check `/api/metrics` → env vars (see `render.yaml` + `.env.example`
+Workers section): ephemeral `DATABASE_URL=file:/tmp/data/jobs.db`,
+`TEMP_DIR=/tmp/converter`, `MAX_CONCURRENT_JOBS=1`,
+`MAX_INPUT_DURATION_SEC=1200`, `CACHE_MAX_MB=0`, `DEFAULT_BITRATE=128`,
+`WARP_ENABLED=false`, `FALLBACK_ENABLED=true`, `ORIGIN_TOKEN=<rand32>`.
 
-## Scaling path
+Verify direct before DNS: `curl https://xxxx.onrender.com/api/metrics` → 200,
+then one short convert. Expect 30–60s cold start after 15 min idle.
 
-- More conversions → raise `MAX_CONCURRENT_JOBS` to CPU count, bigger VM.
-- Multiple VMs → replace `manager.ts` queue with Redis/BullMQ + S3 storage
-  (interfaces already exist: `JobStore`, `lib/storage/files.ts`).
-- Observability → scrape `/api/metrics` (totals/active/byStatus) into any
-  monitor; structured pino logs already carry jobId/event/duration.
+## Edge — Worker kharb-edge
+
+```bash
+npx wrangler secret put ORIGIN_TOKEN   # same value as Render ORIGIN_TOKEN
+npx wrangler deploy --var RENDER_ORIGIN:https://xxxx.onrender.com
+```
+
+Then Cloudflare dashboard → Workers Routes → `kharb.online/api/*`.
+Behavior: OPTIONS answered at edge; `POST /api/analyze` cached 60s;
+502/503/525 → retry once after 5s → `503 {code:WAKING}` (UI auto-retries);
+all forwards carry `X-Origin-Token` + `x-origin-ip`; responses stream
+untouched (SSE + Range downloads work).
+
+## Frontend — Cloudflare Pages
+
+Connect repo → Framework Next.js → build `npm run build` →
+`NEXT_PUBLIC_SITE_URL=https://kharb.online` → custom domains `kharb.online` +
+`www.kharb.online` (keep www→apex redirect in `next.config.mjs`).
+
+## DNS cutover (registrar/Hostinger panel)
+
+1. Add `kharb.online` to Cloudflare → change NS → wait Active. Lower TTL 300.
+2. Delete old `A @/www → <vps-ip>` + all `AAAA` (Render is IPv4-only).
+3. `CNAME @ → pages.dev`, `CNAME www → pages.dev`, Worker route `/api/*`.
+4. Verify: `curl -sI https://kharb.online/` 200, `curl -s
+   https://kharb.online/api/metrics` 200, sitemap locs apex-only.
+
+Direct `xxxx.onrender.com` without `X-Origin-Token` returns 404
+(`middleware.ts`) — that's the bypass guard working, not an outage.
+
+## Fitting the 0.1 CPU box (already in code)
+
+- Formats: `m4a`/`opus` = `ffmpeg -c:a copy` stream copy (near-zero CPU,
+  instant); `mp3` = libmp3lame re-encode (slow path). Default UI is Original.
+- `MAX_CONCURRENT_JOBS=1`, ephemeral SQLite (`PRAGMA WAL`), cache disabled
+  (`CACHE_MAX_MB=0`), polling 3.5s (saves Workers quota), waking UX + retry.
+- Downloads support Range/ETag/HEAD for resumable mobile downloads.
+- Monthly: Render “Clear build cache & Deploy” (fresh yt-dlp vs YouTube).
+
+## Upgrade lever (no re-architecting)
+
+Render Starter $7/mo for the origin only (0.5 CPU, no sleep, +disk at
+`/data`): set `DATABASE_URL=file:/data/jobs.db`, `CACHE_MAX_MB=2000`,
+`WARP_ENABLED=true` with baked `wgcf-profile.conf`. Edge + Pages untouched.
+
+## Old options (kept for reference)
+
+- Fly.io: card required, no free for new users (2026).
+- Koyeb: card required since May 2026. Free instances can't use volumes.
+- Oracle Always-Free (2 OCPU/12GB forever) remains the best $0 VM if you
+  ever have a card — same Docker, zero code changes (ARM needs 2-line
+  Dockerfile arch swap).

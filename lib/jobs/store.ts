@@ -26,6 +26,11 @@ export function getDb(): DatabaseSync {
   const file = dbPathFromUrl(raw);
   if (file !== ":memory:") fs.mkdirSync(path.dirname(file), { recursive: true });
   db = new DatabaseSync(file);
+  // WAL + NORMAL sync: much kinder on 512MB free-tier boxes (fewer fsync
+  // stalls during progress writes). No-op on :memory: test DBs.
+  try {
+    db.exec(`PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;`);
+  } catch {}
   db.exec(`
     CREATE TABLE IF NOT EXISTS jobs (
       id TEXT PRIMARY KEY,
@@ -35,6 +40,7 @@ export function getDb(): DatabaseSync {
       sourceUrl TEXT NOT NULL,
       source TEXT NOT NULL,
       bitrate INTEGER NOT NULL,
+      format TEXT NOT NULL DEFAULT 'mp3',
       ip TEXT NOT NULL DEFAULT '',
       createdAt INTEGER NOT NULL,
       updatedAt INTEGER NOT NULL,
@@ -47,6 +53,13 @@ export function getDb(): DatabaseSync {
     CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
     CREATE INDEX IF NOT EXISTS idx_jobs_ip ON jobs(ip);
   `);
+  // Migration for DBs created before the format column existed.
+  try {
+    const cols = db.prepare(`PRAGMA table_info(jobs)`).all() as Array<{ name: string }>;
+    if (!cols.some((c) => c.name === "format")) {
+      db.exec(`ALTER TABLE jobs ADD COLUMN format TEXT NOT NULL DEFAULT 'mp3'`);
+    }
+  } catch {}
   return db;
 }
 
@@ -59,6 +72,7 @@ export function _resetDbForTests() {
 }
 
 function rowToJob(row: Record<string, unknown>): Job {
+  const format = row.format as string | undefined;
   return {
     id: row.id as string,
     status: row.status as JobStatus,
@@ -67,6 +81,7 @@ function rowToJob(row: Record<string, unknown>): Job {
     sourceUrl: row.sourceUrl as string,
     source: row.source as string,
     bitrate: row.bitrate as number,
+    format: format === "m4a" || format === "opus" ? format : "mp3",
     createdAt: row.createdAt as number,
     updatedAt: row.updatedAt as number,
     expiresAt: row.expiresAt as number,
@@ -81,8 +96,8 @@ export class SqliteJobStore implements JobStore {
   async create(job: Job & { ip?: string }): Promise<void> {
     getDb()
       .prepare(
-        `INSERT INTO jobs (id,status,progress,stage,sourceUrl,source,bitrate,ip,createdAt,updatedAt,expiresAt,errorCode,errorMessage,input,output)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        `INSERT INTO jobs (id,status,progress,stage,sourceUrl,source,bitrate,format,ip,createdAt,updatedAt,expiresAt,errorCode,errorMessage,input,output)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
       )
       .run(
         job.id,
@@ -92,6 +107,7 @@ export class SqliteJobStore implements JobStore {
         job.sourceUrl,
         job.source,
         job.bitrate,
+        job.format ?? "mp3",
         (job as { ip?: string }).ip ?? "",
         job.createdAt,
         job.updatedAt,
@@ -114,12 +130,13 @@ export class SqliteJobStore implements JobStore {
     const next: Job = { ...cur, ...patch, id: cur.id, updatedAt: patch.updatedAt ?? Date.now() };
     getDb()
       .prepare(
-        `UPDATE jobs SET status=?, progress=?, stage=?, errorCode=?, errorMessage=?, input=?, output=?, updatedAt=?, expiresAt=? WHERE id=?`
+        `UPDATE jobs SET status=?, progress=?, stage=?, format=?, errorCode=?, errorMessage=?, input=?, output=?, updatedAt=?, expiresAt=? WHERE id=?`
       )
       .run(
         next.status,
         Math.max(0, Math.min(100, Math.round(next.progress))),
         next.stage,
+        next.format ?? "mp3",
         next.errorCode ?? null,
         next.errorMessage ?? null,
         next.input ? JSON.stringify(next.input) : null,

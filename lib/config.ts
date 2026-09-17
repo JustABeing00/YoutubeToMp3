@@ -38,11 +38,17 @@ const envSchema = z.object({
   // socks5h://127.0.0.1:1080). Empty = direct egress. Managed at runtime by
   // scripts/warp-entrypoint.sh; override with WARP_ENABLED=false to disable.
   YTDLP_PROXY: z.string().default(""),
-  // Persistent conversion cache (videoId+bitrate) + cooldown breaker.
-  CACHE_MAX_MB: z.coerce.number().int().min(100).max(20000).default(2000),
+  // Persistent conversion cache (videoId+format+bitrate) + cooldown breaker.
+  // CACHE_MAX_MB=0 disables the cache (right for ephemeral free-tier disks
+  // where cached files never survive restarts anyway).
+  CACHE_MAX_MB: z.coerce.number().int().min(0).max(20000).default(2000),
   CACHE_TTL_HOURS: z.coerce.number().int().min(1).max(720).default(168),
   BREAKER_THRESHOLD: z.coerce.number().int().min(2).max(50).default(5),
   BREAKER_COOLDOWN_MIN: z.coerce.number().int().min(1).max(240).default(30),
+  // Edge -> origin shared secret. The Cloudflare Worker sends it as
+  // X-Origin-Token; middleware.ts rejects direct /api/* hits without it.
+  // Empty = no enforcement (local dev). Set on Render.
+  ORIGIN_TOKEN: z.string().default(""),
 });
 
 export type AppConfig = z.infer<typeof envSchema>;
@@ -71,4 +77,21 @@ export type AllowedBitrate = (typeof ALLOWED_BITRATES)[number];
 
 export function isAllowedBitrate(v: unknown): v is AllowedBitrate {
   return typeof v === "number" && (ALLOWED_BITRATES as readonly number[]).includes(v);
+}
+
+/** Output container. mp3 = libmp3lame re-encode (slow on free tier);
+ * m4a/opus = stream copy, no re-encode (near-zero CPU, instant). */
+export const ALLOWED_FORMATS = ["mp3", "m4a", "opus"] as const;
+export type AllowedFormat = (typeof ALLOWED_FORMATS)[number];
+
+export function isAllowedFormat(v: unknown): v is AllowedFormat {
+  return typeof v === "string" && (ALLOWED_FORMATS as readonly string[]).includes(v);
+}
+
+export function extForFormat(format: AllowedFormat): string {
+  return format === "mp3" ? "mp3" : format === "m4a" ? "m4a" : "opus";
+}
+
+export function mimeForFormat(format: AllowedFormat): string {
+  return format === "mp3" ? "audio/mpeg" : format === "m4a" ? "audio/mp4" : "audio/ogg";
 }

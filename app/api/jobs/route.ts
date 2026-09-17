@@ -3,7 +3,7 @@ import { z } from "zod";
 import { validateUrl } from "@/lib/validation/url";
 import { assertUrlSafe } from "@/lib/security/ssrf";
 import { checkRate, clientIp } from "@/lib/rate-limit/limiter";
-import { getConfig, isAllowedBitrate } from "@/lib/config";
+import { getConfig, isAllowedBitrate, isAllowedFormat } from "@/lib/config";
 import { errorBody } from "@/lib/errors";
 import { jobStore } from "@/lib/jobs/store";
 import { enqueue, publicJob } from "@/lib/jobs/manager";
@@ -15,6 +15,7 @@ export const runtime = "nodejs";
 const Body = z.object({
   url: z.string().min(1).max(2048),
   bitrate: z.number().int().optional().default(192),
+  format: z.enum(["mp3", "m4a", "opus"]).optional().default("mp3"),
 });
 
 export async function POST(req: NextRequest) {
@@ -27,6 +28,7 @@ export async function POST(req: NextRequest) {
   const parsed = Body.safeParse(body);
   if (!parsed.success) return NextResponse.json(errorBody("INVALID_URL"), { status: 400 });
   if (!isAllowedBitrate(parsed.data.bitrate)) return NextResponse.json(errorBody("INVALID_URL", "bad bitrate"), { status: 400 });
+  if (!isAllowedFormat(parsed.data.format)) return NextResponse.json(errorBody("INVALID_URL", "bad format"), { status: 400 });
 
   const cfg = getConfig();
   const ip = clientIp(req.headers);
@@ -72,6 +74,7 @@ export async function POST(req: NextRequest) {
     sourceUrl: v.normalizedUrl,
     source: v.source,
     bitrate: parsed.data.bitrate,
+    format: parsed.data.format,
     ip,
     input,
   });

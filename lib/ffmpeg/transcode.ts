@@ -3,6 +3,17 @@ import fs from "node:fs/promises";
 import { getConfig } from "@/lib/config";
 import { AdapterError } from "@/lib/media/adapter";
 
+const OUTPUT_EXT: Record<string, string> = { mp3: "mp3", m4a: "m4a", opus: "opus" };
+const OUTPUT_MIME: Record<string, string> = { mp3: "audio/mpeg", m4a: "audio/mp4", opus: "audio/ogg" };
+
+export function extForOutput(format: string): string {
+  return OUTPUT_EXT[format] ?? "mp3";
+}
+
+export function mimeForOutput(format: string): string {
+  return OUTPUT_MIME[format] ?? "audio/mpeg";
+}
+
 /**
  * Transcode any source file to MP3 with libmp3lame.
  * - argv arrays only (no shell)
@@ -119,8 +130,63 @@ export async function transcodeToMp3(opts: TranscodeOpts): Promise<{ bytes: numb
   return { bytes: stat.size };
 }
 
-/** Verify the MP3 with ffprobe: must have an audio stream and sane duration. */
-export async function verifyMp3(filePath: string): Promise<{ duration: number | null; bytes: number }> {
+/**
+ * Instant path for free-tier boxes: remux original audio with `-c:a copy`.
+ * No libmp3lame re-encode, near-zero CPU — a download-time conversion
+ * instead of a minutes-long transcode. Output container follows `format`.
+ */
+export async function remuxAudio(opts: {
+  inputPath: string;
+  outputPath: string;
+  timeoutMs: number;
+  abortSignal?: AbortSignal;
+}): Promise<{ bytes: number }> {
+  const { FFMPEG_PATH } = getConfig();
+  const args = ["-hide_banner", "-loglevel", "error", "-y", "-i", opts.inputPath, "-vn", "-c:a", "copy", opts.outputPath];
+
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn(FFMPEG_PATH, args, { stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+    let stderr = "";
+    let finished = false;
+    const fail = (err: Error) => {
+      if (finished) return;
+      finished = true;
+      try {
+        child.kill("SIGKILL");
+      } catch {}
+      reject(err);
+    };
+    const timer = setTimeout(() => fail(new AdapterError("TIMEOUT", "ffmpeg timed out")), opts.timeoutMs);
+    const onAbort = () => fail(Object.assign(new Error("cancelled"), { code: "CANCELLED" }));
+    opts.abortSignal?.addEventListener("abort", onAbort, { once: true });
+    child.stderr.on("data", (d: Buffer) => {
+      stderr += d.toString();
+      if (stderr.length > 100_000) stderr = stderr.slice(-100_000);
+    });
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      const e = err as NodeJS.ErrnoException;
+      if (e.code === "ENOENT") {
+        fail(new AdapterError("SERVER_ERROR", `ffmpeg binary not found at "${FFMPEG_PATH}". Install FFmpeg (see README).`));
+      } else fail(new AdapterError("CONVERSION_FAILED", e.message));
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      opts.abortSignal?.removeEventListener("abort", onAbort);
+      if (finished) return;
+      finished = true;
+      if (code === 0) resolve();
+      else fail(new AdapterError("CONVERSION_FAILED", `ffmpeg exited with code ${code}: ${stderr.slice(-500)}`));
+    });
+  });
+
+  const stat = await fs.stat(opts.outputPath);
+  if (stat.size < 1024) throw new AdapterError("CONVERSION_FAILED", "ffmpeg produced an empty file");
+  return { bytes: stat.size };
+}
+
+/** Verify any audio output with ffprobe: must have an audio stream. */
+export async function verifyAudio(filePath: string): Promise<{ duration: number | null; bytes: number }> {
   const { FFPROBE_PATH } = getConfig();
   const stat = await fs.stat(filePath);
   const probe = await new Promise<string>((resolve, reject) => {
@@ -155,3 +221,6 @@ export async function verifyMp3(filePath: string): Promise<{ duration: number | 
     throw new AdapterError("CONVERSION_FAILED", "could not verify output");
   }
 }
+
+/** Backward-compat alias (mp3 path). Prefer verifyAudio for new code. */
+export const verifyMp3 = verifyAudio;

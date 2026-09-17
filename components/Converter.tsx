@@ -11,6 +11,7 @@ type Phase =
   | { name: "analyzing" }
   | { name: "ready"; meta: Meta; normalizedUrl: string }
   | { name: "working"; jobId: string; status: string; stage: string; progress: number }
+  | { name: "waking" }
   | { name: "done"; jobId: string; filename: string; bytes: number; duration: number | null; downloadUrl: string }
   | { name: "error"; message: string; code?: string };
 
@@ -33,6 +34,7 @@ function friendlyError(code?: string, fallback?: string): string {
     TIMEOUT: "The conversion timed out. Try a shorter video.",
     OUTPUT_TOO_LARGE: "This video would produce too large a file.",
     RATE_LIMITED: "You're doing that too often. Please wait a moment.",
+    WAKING: "Converter is waking up after idle (free tier sleeps). Retrying automatically…",
     EXPIRED: "This file has expired and was deleted.",
   };
   if (code && map[code]) return map[code];
@@ -43,6 +45,7 @@ export function Converter() {
   const [url, setUrl] = useState("");
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [bitrate, setBitrate] = useState(192);
+  const [format, setFormat] = useState<"mp3" | "m4a" | "opus">("m4a");
   const [hint, setHint] = useState<string | null>(null);
   const pollRef = useRef<number | null>(null);
   const eventRef = useRef<EventSource | null>(null);
@@ -92,15 +95,29 @@ export function Converter() {
   const startJob = useCallback(
     async (normalizedUrl: string) => {
       setPhase({ name: "working", jobId: "", status: "queued", stage: "Waiting for a processing slot…", progress: 0 });
-      try {
-        const res = await fetch("/api/jobs", {
+      // Cold-start aware fetch: Render Free sleeps after 15 min idle and the
+      // edge returns 503 WAKING. Retry twice before surfacing an error.
+      const postJob = async (): Promise<Response> =>
+        fetch("/api/jobs", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ url: normalizedUrl, bitrate }),
+          body: JSON.stringify({ url: normalizedUrl, bitrate, format }),
         });
-        const data = await res.json();
-        if (!res.ok) {
-          setPhase({ name: "error", message: friendlyError(data?.error?.code, data?.error?.message), code: data?.error?.code });
+      try {
+        let res = await postJob();
+        let data = await res.json().catch(() => null);
+        if ((res.status === 503 && data?.error?.code === "WAKING") || (!res.ok && !data)) {
+          setPhase({ name: "waking" });
+          await new Promise((r) => setTimeout(r, 6000));
+          res = await postJob();
+          data = await res.json().catch(() => null);
+        }
+        if (!res.ok || !data?.job) {
+          if (res.status === 503 && data?.error?.code === "WAKING") {
+            setPhase({ name: "error", message: friendlyError("WAKING"), code: "WAKING" });
+          } else {
+            setPhase({ name: "error", message: friendlyError(data?.error?.code, data?.error?.message), code: data?.error?.code });
+          }
           return;
         }
         const jobId: string = data.job.id;
@@ -145,7 +162,9 @@ export function Converter() {
           };
           await tick();
           // No fake increments — server row is the source of truth.
-          pollRef.current = window.setInterval(tick, 2000);
+          // 3.5s (not 2s): halves edge + origin load against the Workers
+          // 100k req/day free quota on slow free-tier conversions.
+          pollRef.current = window.setInterval(tick, 3500);
         };
         try {
           const es = new EventSource(`/api/jobs/${jobId}/events`);
@@ -172,7 +191,7 @@ export function Converter() {
         setPhase({ name: "error", message: "Network error starting conversion." });
       }
     },
-    [bitrate, stopStreams]
+    [bitrate, format, stopStreams]
   );
 
   const cancel = useCallback(async () => {
@@ -196,9 +215,11 @@ export function Converter() {
   const liveMessage =
     phase.name === "analyzing"
       ? "Checking URL…"
-      : phase.name === "working"
-        ? `${phase.stage} ${phase.progress}%`
-        : undefined;
+      : phase.name === "waking"
+        ? "Converter is waking up after idle. Retrying…"
+        : phase.name === "working"
+          ? `${phase.stage} ${phase.progress}%`
+          : undefined;
 
   return (
     <div id="converter" className="mx-auto w-full max-w-2xl scroll-mt-24 px-4">
@@ -278,10 +299,27 @@ export function Converter() {
 
         {phase.name === "ready" && (
           <div className="space-y-4">
-            <MetadataCard meta={phase.meta} bitrate={bitrate} onBitrate={setBitrate} />
+            <MetadataCard meta={phase.meta} bitrate={bitrate} onBitrate={setBitrate} format={format} onFormat={setFormat} />
             <Button onClick={() => void startJob(phase.normalizedUrl)} className="w-full py-3.5 text-base">
-              Convert to MP3 · {bitrate} kbps
+              {format === "mp3" ? `Convert to MP3 · ${bitrate} kbps` : format === "m4a" ? "Convert · Original (instant)" : "Convert · Opus (instant)"}
             </Button>
+          </div>
+        )}
+
+        {phase.name === "waking" && (
+          <div className="card-featured animate-rise p-5" role="status">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-surface2" aria-hidden>
+                <svg className="h-4 w-4 animate-spin text-ink" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25" />
+                  <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+                </svg>
+              </span>
+              <div>
+                <p className="text-sm font-medium tracking-[-0.14px] text-ink">Waking converter…</p>
+                <p className="text-sm tracking-[-0.14px] text-inkmuted">Free tier sleeps after idle. First run takes ~30–60s, then it&apos;s fast.</p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -325,7 +363,7 @@ export function Converter() {
                 download={phase.filename}
                 className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-medium tracking-[-0.14px] text-black transition hover:bg-neutral-200 active:scale-[0.98]"
               >
-                ⬇ Download MP3
+                ⬇ Download audio
               </a>
               <Button variant="secondary" onClick={reset} className="flex-1">
                 Convert another
