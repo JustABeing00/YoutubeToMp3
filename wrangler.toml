@@ -1,18 +1,25 @@
-# kharb.edge — Cloudflare Worker in front of Render Free backend.
-# Free plan, no card: 100k req/day. Deploy: npx wrangler deploy
+# kharb.edge — full-site Cloudflare Worker in front of Render Free backend.
+# Worker-only setup (no Pages): this Worker serves pages (edge-cached) AND
+# proxies /api/* to Render. Free plan, no card: 100k req/day.
+# Deploy: npx wrangler deploy
 name = "kharb-edge"
 main = "worker/index.ts"
 compatibility_date = "2026-09-01"
 
-# Production origin (Render Free Docker, Singapore). Override per env:
+# Production origin (Render Free Docker, Singapore). Override per deploy:
 #   npx wrangler deploy --var RENDER_ORIGIN:https://xxxx.onrender.com
 [vars]
-RENDER_ORIGIN = "https://kharb-api.onrender.com"
+RENDER_ORIGIN = "https://itachi-cawx.onrender.com"
 
 # Secrets (never commit): npx wrangler secret put ORIGIN_TOKEN
 # Must match the backend ORIGIN_TOKEN env on Render (see middleware.ts).
 
-# Route same-origin API through the Worker; Pages serves the rest:
-# [[routes]]
-# pattern = "kharb.online/api/*"
-# zone_name = "kharb.online"
+# Custom-domain routes (Worker-only setup — Pages NOT used).
+# Applied on deploy; needs kharb.online on Cloudflare (NS moved) first.
+[[routes]]
+pattern = "kharb.online/*"
+zone_name = "kharb.online"
+
+[[routes]]
+pattern = "www.kharb.online/*"
+zone_name = "kharb.online"

@@ -1,18 +1,20 @@
 # Deployment — Workers + Render (free, no card)
 
-## Architecture (locked)
+## Architecture (locked — Worker-only, no Pages)
 
 ```
-Browser → https://kharb.online/*
-  ├─ /*      → Cloudflare Pages (static frontend, 7 SEO pages + Converter UI)
-  └─ /api/*  → Worker kharb-edge (worker/index.ts, wrangler.toml)
-                 → https://xxxx.onrender.com/api/* (Render Free Docker)
+Browser → kharb.online/* → Worker kharb-edge (worker/index.ts, wrangler.toml)
+  ├─ /api/*            → converting proxy to Render (no cache, streams SSE/downloads)
+  ├─ pages + static    → cached proxy to Render (HTML 5 min, assets 1 day)
+  └─ www.kharb.online  → 301 to apex inside the Worker
 ```
 
 Same-origin proxy = Converter keeps relative `/api/*` URLs, zero CORS work.
 Workers free: 100k req/day, no card. Render free: 0.1 CPU / 512MB /
-ephemeral / sleeps after 15 min. Conversions stay on Render; the edge only
-proxies + short-caches analyze + retries cold starts.
+ephemeral / sleeps after 15 min. Conversions AND pages both live on Render;
+the edge only caches + retries cold starts. (Pages intentionally NOT used —
+one repo containing backend code makes Pages builds awkward; Pages can bolt
+on later if traffic outgrows Worker quota, with no Render changes.)
 
 ## ⚠️ Cloudflare Workers cannot host conversions
 
@@ -48,13 +50,17 @@ Then Cloudflare dashboard → Workers Routes → `kharb.online/api/*`.
 Behavior: OPTIONS answered at edge; `POST /api/analyze` cached 60s;
 502/503/525 → retry once after 5s → `503 {code:WAKING}` (UI auto-retries);
 all forwards carry `X-Origin-Token` + `x-origin-ip`; responses stream
-untouched (SSE + Range downloads work).
+untouched (SSE + Range downloads work). Full-site mode (no Pages):
+`wrangler.toml` routes `kharb.online/*` + `www.kharb.online/*` — www 301s
+to apex in the Worker, GET pages edge-cached (HTML 5 min, assets 1 day,
+`x-edge-cache: HIT/MISS`), `/api/*` never cached.
 
-## Frontend — Cloudflare Pages
+## Frontend — deleted (Worker-only)
 
-Connect repo → Framework Next.js → build `npm run build` →
-`NEXT_PUBLIC_SITE_URL=https://kharb.online` → custom domains `kharb.online` +
-`www.kharb.online` (keep www→apex redirect in `next.config.mjs`).
+Pages intentionally NOT used: one repo containing backend code makes Pages
+builds awkward, and the Worker already serves pages edge-cached. No Pages
+project, no second `NEXT_PUBLIC_*` copy. If traffic outgrows the 100k/day
+Worker quota, Pages bolts on later with no Render changes.
 
 ## DNS cutover (registrar/Hostinger panel)
 
