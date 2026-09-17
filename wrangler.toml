@@ -14,12 +14,18 @@ RENDER_ORIGIN = "https://itachi-cawx.onrender.com"
 # Secrets (never commit): npx wrangler secret put ORIGIN_TOKEN
 # Must match the backend ORIGIN_TOKEN env on Render (see middleware.ts).
 
-# Custom-domain routes (Worker-only setup — Pages NOT used).
-# Applied on deploy; needs kharb.online on Cloudflare (NS moved) first.
-[[routes]]
-pattern = "kharb.online/*"
-zone_name = "kharb.online"
+# Note: with no [[routes]] active, wrangler enables the workers.dev test URL
+# by default (wanted for now). After cutover is verified, add
+# workers_dev = false + preview_urls = false for custom-domains-only.
 
-[[routes]]
-pattern = "www.kharb.online/*"
-zone_name = "kharb.online"
+# Custom-domain routes (Worker-only setup — Pages NOT used).
+# ACTIVATED after kharb.online is added to Cloudflare: uncomment, deploy.
+# Until then they stay commented — wrangler aborts the whole deploy if a
+# zone doesn't exist yet (code 10083).
+# [[routes]]
+# pattern = "kharb.online/*"
+# zone_name = "kharb.online"
+
+# [[routes]]
+# pattern = "www.kharb.online/*"
+# zone_name = "kharb.online"
